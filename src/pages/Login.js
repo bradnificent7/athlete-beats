@@ -20,7 +20,7 @@ const passwordRules = [
   { label: "One special symbol (!@#$...)", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
-const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const USERNAME_RE = /^(?!\.)(?!.*\.\.)(?!.*\.$)[a-z0-9_.]{3,20}$/;
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);

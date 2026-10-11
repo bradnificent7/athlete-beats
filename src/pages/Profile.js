@@ -20,6 +20,8 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -30,6 +32,8 @@ const Profile = () => {
         const data = snap.exists() ? snap.data() : {};
         setProfile(data);
         setBio(data.bio || "");
+        setFirstName(data.firstName || "");
+        setLastName(data.lastName || "");
         setRoles(
           data.roles && data.roles.length ? data.roles : [data.role || "fan"]
         );
@@ -56,25 +60,46 @@ const Profile = () => {
     setMsg("");
     setError("");
     try {
-      const handle = (user.displayName || "user").toLowerCase();
+      const handle = (
+        profile.username ||
+        user.displayName ||
+        "user" + Math.random().toString(36).slice(2, 8)
+      ).toLowerCase().replace(/[^a-z0-9_.]/g, "");
+
       const base = profile.createdAt
         ? {}
         : {
             username: handle,
-            displayName: handle,
+            displayName: user.displayName || handle,
             createdAt: new Date(),
             followers: 0,
             following: 0,
           };
 
+        const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");  
+
       await setDoc(
-        doc(db, "users", user.uid),
-        { ...base, bio: bio.trim(), roles, role: roles[0] },
-        { merge: true }
-      );
+  doc(db, "users", user.uid),
+  {
+    ...base,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    displayName: fullName || profile.username || handle,
+    bio: bio.trim(),
+    roles,
+    role: roles[0],
+  },
+  { merge: true }
+);
+setProfile((p) => ({
+  ...p,
+  ...base,
+  firstName: firstName.trim(),
+  lastName: lastName.trim(),
+  displayName: fullName || profile.username || handle,
+}));
 
       if (base.username) {
-        setProfile((p) => ({ ...p, ...base }));
         try {
           await setDoc(doc(db, "usernames", handle), { uid: user.uid });
         } catch (e) {
@@ -83,12 +108,13 @@ const Profile = () => {
       }
       setMsg("Saved ✓");
     } catch (e) {
+      console.error("Save failed:", e);
       setError("Couldn't save. Try again.");
     }
     setSaving(false);
   };
 
-  const name = user.displayName || (user.email ? user.email.split("@")[0] : "You");
+  const name = profile.displayName || user.displayName || (user.email ? user.email.split("@")[0] : "You");
   const joined =
     profile.createdAt && profile.createdAt.toDate
       ? profile.createdAt.toDate().toLocaleDateString([], { month: "short", year: "numeric" })
@@ -119,6 +145,20 @@ const Profile = () => {
       <div className="profile-grid">
         <section className="profile-card">
           <h3>About me</h3>
+          <div className="profile-names">
+  <input
+    placeholder="First name (optional)"
+    maxLength={30}
+    value={firstName}
+    onChange={(e) => { setFirstName(e.target.value); setMsg(""); }}
+  />
+  <input
+    placeholder="Last name (optional)"
+    maxLength={30}
+    value={lastName}
+    onChange={(e) => { setLastName(e.target.value); setMsg(""); }}
+  />
+</div>
           <textarea
             value={bio}
             maxLength={300}

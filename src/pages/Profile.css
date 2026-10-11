@@ -128,3 +128,11 @@
   justify-content: center;
   color: rgba(255, 255, 255, 0.3);
 }
+
+.profile-names { display: flex; gap: 10px; margin-bottom: 12px; }
+.profile-names input {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05); color: #fff; font: inherit;
+}
+.profile-names input:focus { outline: none; border-color: #c471ed; }
