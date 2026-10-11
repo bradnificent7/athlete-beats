@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Music from "./pages/Music";
 import AppLayout from "./components/AppLayout";
+import Profile from "./pages/Profile";
 
 
 const ProtectedRoute = ({ children }) => {
@@ -26,6 +27,7 @@ function AppRoutes() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/music" element={<Music />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="*" element={<Home />} />
                 </Routes>
               </AppLayout>
