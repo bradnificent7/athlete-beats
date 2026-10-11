@@ -3,12 +3,21 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import "./Profile.css";
+import { toEmbed } from "../services/embed";
 
 const ROLES = [
   { id: "fan", label: "🏆 Fan" },
   { id: "athlete", label: "🏃 Athlete" },
   { id: "coach", label: "📋 Coach" },
   { id: "media", label: "📺 Media" },
+];
+
+const THEMES = [
+  { id: "default", label: "🟣 Classic" },
+  { id: "neon", label: "🩵 Neon" },
+  { id: "fire", label: "🔥 Fire" },
+  { id: "gold", label: "🏆 Gold" },
+  { id: "forest", label: "🌲 Forest" },
 ];
 
 const Profile = () => {
@@ -22,6 +31,10 @@ const Profile = () => {
   const [error, setError] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [theme, setTheme] = useState("default");
+  const [links, setLinks] = useState([]);
+  const [newLink, setNewLink] = useState("");
+  const [linkErr, setLinkErr] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +47,8 @@ const Profile = () => {
         setBio(data.bio || "");
         setFirstName(data.firstName || "");
         setLastName(data.lastName || "");
+        setTheme(THEMES.some((t) => t.id === data.theme) ? data.theme : "default");
+        setLinks(Array.isArray(data.musicBoxes) ? data.musicBoxes : []);
         setRoles(
           data.roles && data.roles.length ? data.roles : [data.role || "fan"]
         );
@@ -54,7 +69,30 @@ const Profile = () => {
     });
     setMsg("");
   };
+    const addLink = () => {
+    const url = newLink.trim();
+  if (!toEmbed(url)) {
+    setLinkErr("That link isn't supported. Use a YouTube, Spotify, or SoundCloud link.");
+    return;
+  }
+  if (links.length >= 5) { setLinkErr("Max 5 songs."); return; }
+  setLinks((l) => [...l, { id: Date.now().toString(36), url }]);
+  setNewLink(""); setLinkErr(""); setMsg("");
+};
 
+const removeLink = (id) => { setLinks((l) => l.filter((x) => x.id !== id)); setMsg(""); };
+
+const moveLink = (id, dir) => {
+  setLinks((l) => {
+    const i = l.findIndex((x) => x.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= l.length) return l;
+    const copy = [...l];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+    return copy;
+  });
+  setMsg("");
+};
     const handleSave = async () => {
     setSaving(true);
     setMsg("");
@@ -84,6 +122,8 @@ const Profile = () => {
     ...base,
     firstName: firstName.trim(),
     lastName: lastName.trim(),
+    theme,
+    musicBoxes: links,
     displayName: fullName || profile.username || handle,
     bio: bio.trim(),
     roles,
@@ -96,6 +136,8 @@ setProfile((p) => ({
   ...base,
   firstName: firstName.trim(),
   lastName: lastName.trim(),
+  theme,
+musicBoxes: links,
   displayName: fullName || profile.username || handle,
 }));
 
@@ -123,7 +165,7 @@ setProfile((p) => ({
   if (loading) return <p className="profile-msg">Loading profile...</p>;
 
   return (
-    <div className="profile">
+    <div className={`profile theme-${theme}`}>
       <div className="profile-header">
         <div className="profile-avatar">{name[0].toUpperCase()}</div>
         <div className="profile-head-info">
@@ -188,8 +230,54 @@ setProfile((p) => ({
         </section>
 
         <section className="profile-card">
-          <h3>🎵 Profile song</h3>
-          <p className="profile-soon">Pick a song from Music to show here. Coming next.</p>
+          <h3>🎨 Theme</h3>
+<div className="profile-roles">
+  {THEMES.map((t) => (
+    <button
+      key={t.id}
+      className={`profile-role ${theme === t.id ? "active" : ""}`}
+      onClick={() => { setTheme(t.id); setMsg(""); }}
+    >
+      {t.label}
+    </button>
+  ))}
+</div>
+
+<h3>🎵 My music box</h3>
+{links.length === 0 && (
+  <p className="profile-soon">Paste a YouTube, Spotify, or SoundCloud link below.</p>
+)}
+{links.map((item, i) => {
+  const e = toEmbed(item.url);
+  if (!e) return null;
+  return (
+    <div key={item.id} className="music-item">
+      <iframe
+        title={`${e.provider} player ${i + 1}`}
+        src={e.src}
+        height={e.height}
+        loading="lazy"
+        allow="encrypted-media; clipboard-write"
+      />
+      <div className="music-controls">
+        <button onClick={() => moveLink(item.id, -1)} disabled={i === 0}>↑</button>
+        <button onClick={() => moveLink(item.id, 1)} disabled={i === links.length - 1}>↓</button>
+        <button onClick={() => removeLink(item.id)}>Remove</button>
+      </div>
+    </div>
+  );
+})}
+<div className="music-add">
+  <input
+    placeholder="Paste a song link..."
+    value={newLink}
+    onChange={(e) => { setNewLink(e.target.value); setLinkErr(""); }}
+    onKeyDown={(e) => e.key === "Enter" && addLink()}
+  />
+  <button onClick={addLink}>Add</button>
+</div>
+{linkErr && <p className="profile-err">{linkErr}</p>}
+<p className="profile-soon">Click Save profile to keep your changes.</p>
 
           <h3>⭐ Top 8</h3>
           <div className="profile-top8">
