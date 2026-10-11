@@ -1,0 +1,58 @@
+.games-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.date-nav button {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.date-nav button:hover { border-color: #c471ed; }
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.game-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.game-status {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c471ed;
+  margin-bottom: 8px;
+}
+
+.game-team {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.9rem;
+}
+
+.home-msg { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+.home-msg.error { color: #ff4081; }

@@ -1,3 +1,4 @@
+import Home from "./pages/Home";
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -24,9 +25,7 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <div style={{ color: "white", opacity: 0.6 }}>
-                  🏀 Home feed coming next...
-                </div>
+                <Home />
               </AppLayout>
             </ProtectedRoute>
           }
