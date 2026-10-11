@@ -1,58 +1,99 @@
-.games-header {
+.games-title { margin-bottom: 0.75rem; }
+
+.home-msg { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+.home-msg.error { color: #ff4081; }
+
+/* Date bubbles */
+.date-pills {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 1.25rem;
 }
 
-.date-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-}
-
-.date-nav button {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
-  padding: 4px 12px;
+.date-pill {
+  flex-shrink: 0;
+  padding: 0.45rem 1rem;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.date-nav button:hover { border-color: #c471ed; }
+.date-pill:hover { border-color: #c471ed; color: white; }
 
+.date-pill.active {
+  background: linear-gradient(135deg, #7b2ff7, #e040fb);
+  border-color: transparent;
+  color: white;
+}
+
+/* Game cards */
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
 .game-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1rem;
+  border-radius: 20px;
+  padding: 1.1rem 1rem 1.25rem;
+  text-align: center;
 }
 
-.game-status {
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.game-time {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid rgba(196, 113, 237, 0.5);
+  border-radius: 99px;
   color: #c471ed;
-  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
 }
 
-.game-team {
+.matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-side {
   display: flex;
-  justify-content: space-between;
-  padding: 3px 0;
-  font-size: 0.9rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.home-msg { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
-.home-msg.error { color: #ff4081; }
+.team-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.team-name { font-size: 0.95rem; font-weight: 600; }
+.team-city { font-size: 0.75rem; color: rgba(255, 255, 255, 0.45); }
+
+.team-score {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.vs {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.1em;
+}
