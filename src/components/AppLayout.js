@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import "./AppLayout.css";
+import { Link } from "react-router-dom";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
@@ -101,12 +102,12 @@ const AppLayout = ({ children }) => {
           <ul className="sidebar-nav">
             {navItems.map((item) => (
               <li key={item.label}>
-                <a href={item.path} className="sidebar-link">
+                <Link to={item.path} className="sidebar-link">
                   <span className="sidebar-icon">{item.icon}</span>
                   {sidebarOpen && (
                     <span className="sidebar-label">{item.label}</span>
                   )}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
