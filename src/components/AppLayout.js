@@ -4,15 +4,12 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import "./AppLayout.css";
 import { Link } from "react-router-dom";
+import { usePlayer } from "../context/PlayerContext";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [nowPlaying] = useState({
-    song: "Not Playing",
-    artist: "Select a track",
-    playing: false,
-  });
+  const { current, playing, toggle, next, prev } = usePlayer();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -133,32 +130,25 @@ const AppLayout = ({ children }) => {
       {/* Bottom music player bar */}
       <div className="player-bar">
         <div className="player-left">
-          <div className="player-thumb">🎵</div>
+        <div className="player-thumb">🎵</div>
           <div className="player-info">
-            <p className="player-song">{nowPlaying.song}</p>
-            <p className="player-artist">{nowPlaying.artist}</p>
+            <p className="player-song">{current ? current.title : "Not Playing"}</p>
+            <p className="player-artist">
+              {current ? current.channel : "Search a song in Music"}
+            </p>
           </div>
-          <button className="player-like">🤍</button>
         </div>
 
         <div className="player-center">
-          <button className="player-btn">⏮</button>
-          <button className="player-btn play-btn">
-            {nowPlaying.playing ? "⏸" : "▶️"}
+          <button className="player-btn" onClick={prev}>⏮</button>
+          <button className="player-btn play-btn" onClick={toggle}>
+            {playing ? "⏸" : "▶️"}
           </button>
-          <button className="player-btn">⏭</button>
+          <button className="player-btn" onClick={next}>⏭</button>
         </div>
 
         <div className="player-right">
-          <span className="player-platform">
-            <img
-              src="https://www.google.com/s2/favicons?domain=spotify.com"
-              alt="Spotify"
-              width="16"
-            />
-            Spotify
-          </span>
-          <span className="player-volume">🔊</span>
+          <span className="player-platform">YouTube</span>
         </div>
       </div>
     </div>

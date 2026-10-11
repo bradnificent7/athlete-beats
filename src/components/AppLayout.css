@@ -441,3 +441,12 @@
   .navbar-center { display: none; }
   .player-right { display: none; }
 }
+
+.player-info { min-width: 0; }
+
+.player-song, .player-artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
