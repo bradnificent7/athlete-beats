@@ -6,8 +6,10 @@ import {
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Login.css";
 
@@ -18,9 +20,12 @@ const passwordRules = [
   { label: "One special symbol (!@#$...)", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,9 +34,11 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [role, setRole] = useState("fan");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
 
   const passwordStrength = passwordRules.filter((r) => r.test(password)).length;
 
@@ -50,6 +57,19 @@ const Login = () => {
     return "#00c853";
   };
 
+  // ── Check if a username is free (looks up one document, never lists users) ──
+  const checkUsername = async (value) => {
+    const name = value.toLowerCase();
+    if (name.length < 3) { setUsernameAvailable(null); return; }
+    if (!USERNAME_RE.test(name)) { setUsernameAvailable(false); return; }
+    try {
+      const snap = await getDoc(doc(db, "usernames", name));
+      setUsernameAvailable(!snap.exists());
+    } catch (e) {
+      setUsernameAvailable(null);
+    }
+  };
+
   const validatePassword = () => {
     if (passwordStrength < 4) {
       setError("Password must have 8+ characters, a number, uppercase letter, and special symbol.");
@@ -62,35 +82,78 @@ const Login = () => {
     return true;
   };
 
-  const saveUserRole = async (user) => {
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email || "",
+  // ── Create a profile ONCE. Never overwrites an existing one. ──
+  const saveUserRole = async (user, uname) => {
+    const ref = doc(db, "users", user.uid);
+    const existing = await getDoc(ref);
+    if (existing.exists()) return;
+
+    const handle = (
+      uname || "user" + Math.random().toString(36).slice(2, 8)
+    ).toLowerCase();
+
+    await setDoc(ref, {
+      username: handle,
+      displayName: handle,
       role: role,
+      roles: [role],
       createdAt: new Date(),
-      displayName: user.displayName || "",
-    }, { merge: true });
+      bio: "",
+      followers: 0,
+      following: 0,
+    });
+
+    try {
+      await setDoc(doc(db, "usernames", handle), { uid: user.uid });
+    } catch (e) {
+      // handle already claimed, profile still works
+    }
   };
 
+  // ── Email sign in / sign up ──
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     setError("");
-    if (isSignUp && !validatePassword()) return;
+    setNotice("");
     setLoading(true);
+
     try {
-      let result;
       if (isSignUp) {
-        result = await createUserWithEmailAndPassword(auth, email, password);
-        await saveUserRole(result.user);
+        if (!validatePassword()) { setLoading(false); return; }
+        if (!usernameAvailable) {
+          setError("Pick an available username (3-20 letters, numbers, or _).");
+          setLoading(false);
+          return;
+        }
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(result.user, { displayName: username.toLowerCase() });
+        await saveUserRole(result.user, username);
       } else {
-        result = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
       }
-      console.log("Logged in:", result.user.email);
     } catch (err) {
       setError(err.message.replace("Firebase: ", ""));
     }
     setLoading(false);
   };
 
+  // ── Forgot password ──
+  const handleReset = async () => {
+    setError("");
+    setNotice("");
+    if (!email) {
+      setError("Type your email above first, then click Forgot password.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setNotice("Password reset email sent. Check your inbox (and spam).");
+    } catch (err) {
+      setError(err.message.replace("Firebase: ", ""));
+    }
+  };
+
+  // ── Google ──
   const handleGoogle = async () => {
     setError("");
     try {
@@ -102,6 +165,7 @@ const Login = () => {
     }
   };
 
+  // ── Phone ──
   const handleSendOTP = async () => {
     setError("");
     setLoading(true);
@@ -141,27 +205,27 @@ const Login = () => {
         {/* Logo */}
         <div className="login-logo">
           <span className="logo-icon">🎵</span>
-          <h1 className="logo-text">AthletBeats</h1>
+          <h1 className="logo-text">AthleteBeats</h1>
           <p className="logo-sub">Where Sports Meets Sound</p>
         </div>
 
-        {/* Tabs */}
+        {/* Sign In / Sign Up tabs */}
         <div className="login-tabs">
           <button
             className={`tab-btn ${!isSignUp ? "active" : ""}`}
-            onClick={() => { setIsSignUp(false); setShowPhone(false); setError(""); }}
+            onClick={() => { setIsSignUp(false); setShowPhone(false); setError(""); setNotice(""); }}
           >
             Sign In
           </button>
           <button
             className={`tab-btn ${isSignUp ? "active" : ""}`}
-            onClick={() => { setIsSignUp(true); setShowPhone(false); setError(""); }}
+            onClick={() => { setIsSignUp(true); setShowPhone(false); setError(""); setNotice(""); }}
           >
             Sign Up
           </button>
         </div>
 
-        {/* Role selector */}
+        {/* Role selector — sign up only */}
         {isSignUp && (
           <div className="role-selector">
             <p className="role-label">I am a...</p>
@@ -169,6 +233,7 @@ const Login = () => {
               {["fan", "athlete", "coach", "media"].map((r) => (
                 <button
                   key={r}
+                  type="button"
                   className={`role-btn ${role === r ? "active" : ""}`}
                   onClick={() => setRole(r)}
                 >
@@ -226,6 +291,41 @@ const Login = () => {
         ) : (
           <>
             <form className="login-form" onSubmit={handleEmailAuth}>
+
+              {/* Username — sign up only */}
+              {isSignUp && (
+                <div className="input-group">
+                  <label>Username</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. hooper23"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        checkUsername(e.target.value);
+                      }}
+                      required
+                    />
+                    {username.length >= 3 && (
+                      <span className="username-status">
+                        {usernameAvailable === true && "✓"}
+                        {usernameAvailable === false && "✗"}
+                      </span>
+                    )}
+                  </div>
+                  {username.length >= 3 && usernameAvailable !== null && (
+                    <p className="match-msg" style={{
+                      color: usernameAvailable ? "#00c853" : "#f64f59"
+                    }}>
+                      {usernameAvailable
+                        ? "✓ Username available"
+                        : "✗ Taken or invalid (3-20 letters, numbers, _)"}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Email */}
               <div className="input-group">
                 <label>Email</label>
@@ -258,7 +358,6 @@ const Login = () => {
                   </button>
                 </div>
 
-                {/* Password strength bar — sign up only */}
                 {isSignUp && password.length > 0 && (
                   <>
                     <div className="strength-bar">
@@ -267,7 +366,9 @@ const Login = () => {
                           key={i}
                           className="strength-segment"
                           style={{
-                            background: i <= passwordStrength ? getStrengthColor() : "rgba(255,255,255,0.1)"
+                            background: i <= passwordStrength
+                              ? getStrengthColor()
+                              : "rgba(255,255,255,0.1)"
                           }}
                         />
                       ))}
@@ -286,6 +387,12 @@ const Login = () => {
                       ))}
                     </ul>
                   </>
+                )}
+
+                {!isSignUp && (
+                  <button type="button" className="back-btn" onClick={handleReset}>
+                    Forgot password?
+                  </button>
                 )}
               </div>
 
@@ -320,6 +427,7 @@ const Login = () => {
               )}
 
               {error && <p className="error-msg">{error}</p>}
+              {notice && <p className="match-msg" style={{ color: "#00c853", textAlign: "center" }}>{notice}</p>}
 
               <button type="submit" className="submit-btn" disabled={loading}>
                 {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}

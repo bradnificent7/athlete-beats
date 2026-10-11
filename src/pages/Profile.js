@@ -51,16 +51,36 @@ const Profile = () => {
     setMsg("");
   };
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     setSaving(true);
     setMsg("");
     setError("");
     try {
+      const handle = (user.displayName || "user").toLowerCase();
+      const base = profile.createdAt
+        ? {}
+        : {
+            username: handle,
+            displayName: handle,
+            createdAt: new Date(),
+            followers: 0,
+            following: 0,
+          };
+
       await setDoc(
         doc(db, "users", user.uid),
-        { bio: bio.trim(), roles, role: roles[0] },
+        { ...base, bio: bio.trim(), roles, role: roles[0] },
         { merge: true }
       );
+
+      if (base.username) {
+        setProfile((p) => ({ ...p, ...base }));
+        try {
+          await setDoc(doc(db, "usernames", handle), { uid: user.uid });
+        } catch (e) {
+          // handle already claimed, fine
+        }
+      }
       setMsg("Saved ✓");
     } catch (e) {
       setError("Couldn't save. Try again.");
