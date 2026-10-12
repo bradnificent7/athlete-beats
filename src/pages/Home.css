@@ -1,7 +1,14 @@
-.games-title { margin-bottom: 0.75rem; }
+.games-title {
+  margin-bottom: 0.75rem;
+}
 
-.home-msg { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
-.home-msg.error { color: #ff4081; }
+.home-msg {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+.home-msg.error {
+  color: #ff4081;
+}
 
 /* Date bubbles */
 .date-pills {
@@ -24,7 +31,10 @@
   transition: all 0.2s;
 }
 
-.date-pill:hover { border-color: #c471ed; color: white; }
+.date-pill:hover {
+  border-color: #c471ed;
+  color: white;
+}
 
 .date-pill.active {
   background: linear-gradient(135deg, #7b2ff7, #e040fb);
@@ -82,8 +92,14 @@
   margin-bottom: 6px;
 }
 
-.team-name { font-size: 0.95rem; font-weight: 600; }
-.team-city { font-size: 0.75rem; color: rgba(255, 255, 255, 0.45); }
+.team-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.team-city {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
 
 .team-score {
   font-size: 1.6rem;

@@ -98,7 +98,9 @@ const SearchTab = () => {
                 <div className="result-title">{t.title}</div>
                 <div className="result-channel">{t.channel}</div>
                 {isCurrent && (
-                  <div className="result-now">{playing ? "▶ Playing" : "Paused"}</div>
+                  <div className="result-now">
+                    {playing ? "▶ Playing" : "Paused"}
+                  </div>
                 )}
               </div>
             </button>
@@ -128,7 +130,9 @@ const LinkTab = () => {
     setError("");
     const parsed = parseLink(input);
     if (!parsed) {
-      setError("Paste a Spotify or SoundCloud link (open.spotify.com/... or soundcloud.com/...).");
+      setError(
+        "Paste a Spotify or SoundCloud link (open.spotify.com/... or soundcloud.com/...).",
+      );
       return;
     }
     if (items.some((i) => i.url === parsed.url)) {
@@ -154,7 +158,9 @@ const LinkTab = () => {
       </form>
       {error && <p className="music-error">{error}</p>}
       {items.length === 0 && (
-        <p className="music-empty">Nothing here yet. Add your first song above.</p>
+        <p className="music-empty">
+          Nothing here yet. Add your first song above.
+        </p>
       )}
 
       <div className="music-list">
@@ -164,7 +170,10 @@ const LinkTab = () => {
               <span className={`music-badge ${item.platform}`}>
                 {item.platform === "spotify" ? "Spotify" : "SoundCloud"}
               </span>
-              <button className="music-remove" onClick={() => handleRemove(item.id)}>
+              <button
+                className="music-remove"
+                onClick={() => handleRemove(item.id)}
+              >
                 Remove
               </button>
             </div>

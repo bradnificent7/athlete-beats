@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Music from "./pages/Music";
 import AppLayout from "./components/AppLayout";
 import Profile from "./pages/Profile";
+import Legal from "./pages/Legal";
 
 
 const ProtectedRoute = ({ children }) => {
@@ -20,6 +21,7 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+        <Route path="/legal/:doc" element={<Legal />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <PlayerProvider>
@@ -29,6 +31,7 @@ function AppRoutes() {
                   <Route path="/music" element={<Music />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="*" element={<Home />} />
+    
                 </Routes>
               </AppLayout>
             </PlayerProvider>

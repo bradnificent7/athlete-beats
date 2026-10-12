@@ -55,8 +55,13 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-30px) scale(1.05); }
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-30px) scale(1.05);
+  }
 }
 
 /* ── Card ── */
@@ -227,7 +232,9 @@
   font-weight: 600;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: opacity 0.2s, transform 0.1s;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
   letter-spacing: 0.03em;
 }
 
@@ -385,7 +392,7 @@
   font-size: 1rem;
   padding: 0;
   line-height: 1;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ── Password strength bar ── */
@@ -427,7 +434,7 @@
 }
 
 .rule-fail {
-  color: rgba(255,255,255,0.35);
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* ── Match message ── */
@@ -436,3 +443,11 @@
   margin-top: 5px;
   font-weight: 500;
 }
+
+.login-legal {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin-top: 12px;
+}
+.login-legal a { color: #c471ed; }

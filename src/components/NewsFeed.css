@@ -1,8 +1,17 @@
-.news { margin-top: 2.5rem; }
-.news-title { margin-bottom: 0.75rem; }
+.news {
+  margin-top: 2.5rem;
+}
+.news-title {
+  margin-bottom: 0.75rem;
+}
 
-.news-msg { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
-.news-msg.error { color: #ff4081; }
+.news-msg {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+.news-msg.error {
+  color: #ff4081;
+}
 
 .news-grid {
   display: grid;
@@ -21,7 +30,9 @@
   overflow: hidden;
   color: white;
   text-decoration: none;
-  transition: transform 0.15s, border-color 0.2s;
+  transition:
+    transform 0.15s,
+    border-color 0.2s;
 }
 
 .news-card:hover {
@@ -35,7 +46,9 @@
   object-fit: cover;
 }
 
-.news-body { padding: 0.9rem 1rem 1.1rem; }
+.news-body {
+  padding: 0.9rem 1rem 1.1rem;
+}
 
 .news-meta {
   font-size: 0.72rem;

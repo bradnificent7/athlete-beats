@@ -12,6 +12,7 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Login.css";
+import { Link } from "react-router-dom";
 
 const passwordRules = [
   { label: "At least 8 characters", test: (p) => p.length >= 8 },
@@ -432,8 +433,13 @@ const Login = () => {
               <button type="submit" className="submit-btn" disabled={loading}>
                 {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
               </button>
+            <p className="login-legal">
+            By signing up you agree to our{" "}
+            <Link to="/legal/terms">Terms</Link>,{" "}
+            <Link to="/legal/privacy">Privacy Policy</Link>, and{" "}
+            <Link to="/legal/guidelines">Community Guidelines</Link>.
+            </p>
             </form>
-
             <div className="divider"><span>or</span></div>
 
             <div className="social-btns">

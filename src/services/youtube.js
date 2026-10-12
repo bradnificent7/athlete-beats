@@ -21,9 +21,13 @@ export async function searchMusic(q) {
     key: process.env.REACT_APP_YOUTUBE_API_KEY,
   });
 
-  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?${params}`,
+  );
   if (res.status === 403) {
-    throw new Error("YouTube search limit reached, or the key isn't allowed here. Try again later.");
+    throw new Error(
+      "YouTube search limit reached, or the key isn't allowed here. Try again later.",
+    );
   }
   if (!res.ok) throw new Error(`YouTube error (${res.status})`);
 

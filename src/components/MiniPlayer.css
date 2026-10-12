@@ -12,7 +12,9 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.yt-window.hidden { display: none; }
+.yt-window.hidden {
+  display: none;
+}
 
 .yt-header {
   display: flex;
@@ -49,4 +51,6 @@
   display: block;
 }
 
-.yt-window.collapsed .yt-frame { display: none; }
+.yt-window.collapsed .yt-frame {
+  display: none;
+}

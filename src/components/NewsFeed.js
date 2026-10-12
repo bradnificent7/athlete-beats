@@ -18,10 +18,18 @@ const NewsFeed = () => {
   useEffect(() => {
     let cancelled = false;
     getSportsNews()
-      .then((a) => { if (!cancelled) setArticles(a); })
-      .catch((e) => { if (!cancelled) setError(e.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .then((a) => {
+        if (!cancelled) setArticles(a);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -47,7 +55,9 @@ const NewsFeed = () => {
                 className="news-img"
                 src={a.urlToImage}
                 alt=""
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
             )}
             <div className="news-body">

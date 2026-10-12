@@ -1,5 +1,10 @@
 import React, {
-  createContext, useContext, useEffect, useRef, useState, useCallback,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
 } from "react";
 import "../components/MiniPlayer.css";
 
@@ -46,23 +51,29 @@ export const PlayerProvider = ({ children }) => {
     }
   }, []);
 
-  const playAt = useCallback((i) => {
-    const q = queueRef.current;
-    if (i < 0 || i >= q.length) return;
-    indexRef.current = i;
-    loadTrack(q[i]);
-  }, [loadTrack]);
+  const playAt = useCallback(
+    (i) => {
+      const q = queueRef.current;
+      if (i < 0 || i >= q.length) return;
+      indexRef.current = i;
+      loadTrack(q[i]);
+    },
+    [loadTrack],
+  );
 
   const next = useCallback(() => playAt(indexRef.current + 1), [playAt]);
   const prev = useCallback(() => playAt(indexRef.current - 1), [playAt]);
   nextRef.current = next;
 
-  const playTrack = useCallback((track, list) => {
-    const queue = list && list.length ? list : [track];
-    queueRef.current = queue;
-    indexRef.current = queue.findIndex((t) => t.id === track.id);
-    loadTrack(track);
-  }, [loadTrack]);
+  const playTrack = useCallback(
+    (track, list) => {
+      const queue = list && list.length ? list : [track];
+      queueRef.current = queue;
+      indexRef.current = queue.findIndex((t) => t.id === track.id);
+      loadTrack(track);
+    },
+    [loadTrack],
+  );
 
   const toggle = useCallback(() => {
     const p = playerRef.current;
@@ -118,7 +129,14 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   const value = {
-    current, playing, collapsed, playTrack, toggle, next, prev, toggleCollapse,
+    current,
+    playing,
+    collapsed,
+    playTrack,
+    toggle,
+    next,
+    prev,
+    toggleCollapse,
   };
 
   return (

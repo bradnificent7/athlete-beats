@@ -5,11 +5,23 @@ import { auth } from "../firebase";
 import "./AppLayout.css";
 import { Link } from "react-router-dom";
 import { usePlayer } from "../context/PlayerContext";
+import useProfile from "../hooks/useProfile";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { current, playing, toggle, next, prev } = usePlayer();
+  const profile = useProfile();
+
+  const displayName =
+    profile?.displayName ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "You";
+
+  const roleLabel = (profile?.roles || ["fan"])
+    .map((r) => r.charAt(0).toUpperCase() + r.slice(1))
+    .join(" · ");
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -51,10 +63,7 @@ const AppLayout = ({ children }) => {
         <div className="navbar-center">
           <div className="search-bar">
             <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search athletes, songs, teams..."
-            />
+            <input type="text" placeholder="Search athletes, songs, teams..." />
           </div>
         </div>
 
@@ -62,13 +71,9 @@ const AppLayout = ({ children }) => {
           <button className="nav-icon-btn">🔔</button>
           <button className="nav-icon-btn">✉️</button>
           <div className="nav-user">
-            <div className="nav-avatar">
-              {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || "?"}
-            </div>
+            <div className="nav-avatar">{displayName[0].toUpperCase()}</div>
             <div className="nav-user-info">
-              <span className="nav-username">
-                {user?.displayName || user?.email?.split("@")[0]}
-              </span>
+              <span className="nav-username">{displayName}</span>
               <button className="logout-btn" onClick={handleLogout}>
                 Sign out
               </button>
@@ -82,15 +87,11 @@ const AppLayout = ({ children }) => {
         <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
           {/* User profile mini card */}
           <div className="sidebar-profile">
-            <div className="sidebar-avatar">
-              {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || "?"}
-            </div>
+            <div className="sidebar-avatar">{displayName[0].toUpperCase()}</div>
             {sidebarOpen && (
               <div className="sidebar-user-info">
-                <p className="sidebar-username">
-                  {user?.displayName || user?.email?.split("@")[0]}
-                </p>
-                <p className="sidebar-role">🏆 Fan</p>
+                <p className="sidebar-username">{displayName}</p>
+                <p className="sidebar-role">{roleLabel}</p>
               </div>
             )}
           </div>
@@ -130,9 +131,11 @@ const AppLayout = ({ children }) => {
       {/* Bottom music player bar */}
       <div className="player-bar">
         <div className="player-left">
-        <div className="player-thumb">🎵</div>
+          <div className="player-thumb">🎵</div>
           <div className="player-info">
-            <p className="player-song">{current ? current.title : "Not Playing"}</p>
+            <p className="player-song">
+              {current ? current.title : "Not Playing"}
+            </p>
             <p className="player-artist">
               {current ? current.channel : "Search a song in Music"}
             </p>
@@ -140,11 +143,15 @@ const AppLayout = ({ children }) => {
         </div>
 
         <div className="player-center">
-          <button className="player-btn" onClick={prev}>⏮</button>
+          <button className="player-btn" onClick={prev}>
+            ⏮
+          </button>
           <button className="player-btn play-btn" onClick={toggle}>
             {playing ? "⏸" : "▶️"}
           </button>
-          <button className="player-btn" onClick={next}>⏭</button>
+          <button className="player-btn" onClick={next}>
+            ⏭
+          </button>
         </div>
 
         <div className="player-right">

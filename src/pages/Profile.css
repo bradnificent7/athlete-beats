@@ -1,4 +1,6 @@
-.profile-msg { color: rgba(255, 255, 255, 0.6); }
+.profile-msg {
+  color: rgba(255, 255, 255, 0.6);
+}
 
 .profile-header {
   display: flex;
@@ -27,10 +29,21 @@
   flex-shrink: 0;
 }
 
-.profile-name { font-size: 1.5rem; }
-.profile-handle { color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; margin-top: 2px; }
+.profile-name {
+  font-size: 1.5rem;
+}
+.profile-handle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
 
-.profile-badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 0.6rem 0; }
+.profile-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0.6rem 0;
+}
 
 .profile-badge {
   padding: 0.2rem 0.7rem;
@@ -40,8 +53,13 @@
   font-size: 0.78rem;
 }
 
-.profile-stats { color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; }
-.profile-stats strong { color: white; }
+.profile-stats {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+}
+.profile-stats strong {
+  color: white;
+}
 
 .profile-grid {
   display: grid;
@@ -56,8 +74,13 @@
   padding: 1.25rem;
 }
 
-.profile-card h3 { font-size: 0.95rem; margin: 0.25rem 0 0.6rem; }
-.profile-card h3:not(:first-child) { margin-top: 1.25rem; }
+.profile-card h3 {
+  font-size: 0.95rem;
+  margin: 0.25rem 0 0.6rem;
+}
+.profile-card h3:not(:first-child) {
+  margin-top: 1.25rem;
+}
 
 .profile-card textarea {
   width: 100%;
@@ -73,11 +96,21 @@
   outline: none;
 }
 
-.profile-card textarea:focus { border-color: #c471ed; }
+.profile-card textarea:focus {
+  border-color: #c471ed;
+}
 
-.profile-count { text-align: right; font-size: 0.72rem; color: rgba(255, 255, 255, 0.4); }
+.profile-count {
+  text-align: right;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+}
 
-.profile-roles { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-roles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .profile-role {
   padding: 0.45rem 1rem;
@@ -106,11 +139,25 @@
   cursor: pointer;
 }
 
-.profile-save:disabled { opacity: 0.6; cursor: not-allowed; }
-.profile-ok { color: #00c853; font-size: 0.85rem; margin-top: 8px; }
-.profile-err { color: #ff4081; font-size: 0.85rem; margin-top: 8px; }
+.profile-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.profile-ok {
+  color: #00c853;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.profile-err {
+  color: #ff4081;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
 
-.profile-soon { color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; }
+.profile-soon {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
+}
 
 .profile-top8 {
   display: grid;
@@ -129,24 +176,45 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
-.profile-names { display: flex; gap: 10px; margin-bottom: 12px; }
-.profile-names input {
-  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05); color: #fff; font: inherit;
+.profile-names {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
 }
-.profile-names input:focus { outline: none; border-color: #c471ed; }
+.profile-names input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font: inherit;
+}
+.profile-names input:focus {
+  outline: none;
+  border-color: #c471ed;
+}
 
 /* ---- themes ---- */
 .profile {
   --accent: #c471ed;
   --grad: linear-gradient(135deg, #7b2ff7, #e040fb, #f64f59);
-  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%);
+  background: radial-gradient(
+    circle at top left,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    transparent 55%
+  );
   border-radius: 24px;
 }
 .profile .profile-avatar,
-.profile .profile-save { background: var(--grad); }
-.profile .profile-badge { color: var(--accent); border-color: var(--accent); }
+.profile .profile-save {
+  background: var(--grad);
+}
+.profile .profile-badge {
+  color: var(--accent);
+  border-color: var(--accent);
+}
 .profile .profile-role.active {
   color: var(--accent);
   border-color: var(--accent);
@@ -154,24 +222,47 @@
 }
 .profile .profile-card textarea:focus,
 .profile .profile-names input:focus,
-.profile .music-add input:focus { border-color: var(--accent); outline: none; }
+.profile .music-add input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
 .profile .profile-header,
-.profile .profile-card { border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.profile .profile-card {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
 
-.profile.theme-neon   { --accent: #00e5ff; --grad: linear-gradient(135deg, #0072ff, #00e5ff, #7cffcb); }
-.profile.theme-fire   { --accent: #ff7a18; --grad: linear-gradient(135deg, #f12711, #ff7a18, #f5af19); }
-.profile.theme-gold   { --accent: #f5c542; --grad: linear-gradient(135deg, #b8860b, #f5c542, #fff1a8); }
-.profile.theme-forest { --accent: #3ddc84; --grad: linear-gradient(135deg, #0b6e4f, #3ddc84, #b8f27b); }
+.profile.theme-neon {
+  --accent: #00e5ff;
+  --grad: linear-gradient(135deg, #0072ff, #00e5ff, #7cffcb);
+}
+.profile.theme-fire {
+  --accent: #ff7a18;
+  --grad: linear-gradient(135deg, #f12711, #ff7a18, #f5af19);
+}
+.profile.theme-gold {
+  --accent: #f5c542;
+  --grad: linear-gradient(135deg, #b8860b, #f5c542, #fff1a8);
+}
+.profile.theme-forest {
+  --accent: #3ddc84;
+  --grad: linear-gradient(135deg, #0b6e4f, #3ddc84, #b8f27b);
+}
 
 /* ---- music box ---- */
-.music-item { margin-bottom: 14px; }
+.music-item {
+  margin-bottom: 14px;
+}
 .music-item iframe {
   width: 100%;
   border: 0;
   border-radius: 12px;
   display: block;
 }
-.music-controls { display: flex; gap: 6px; margin-top: 6px; }
+.music-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
 .music-controls button {
   padding: 4px 12px;
   border-radius: 8px;
@@ -181,14 +272,31 @@
   cursor: pointer;
   font-size: 0.78rem;
 }
-.music-controls button:disabled { opacity: 0.3; cursor: default; }
-.music-add { display: flex; gap: 8px; margin-top: 8px; }
+.music-controls button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.music-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
 .music-add input {
-  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05); color: #fff; font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font: inherit;
 }
 .music-add button {
-  padding: 0 16px; border-radius: 10px; border: none;
-  background: var(--grad); color: #fff; font-weight: 600; cursor: pointer;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--grad);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
 }

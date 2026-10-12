@@ -46,7 +46,8 @@ const logoUrl = (abbr) => {
   return `https://a.espncdn.com/i/teamlogos/nba/500/${code}.png`;
 };
 
-const hasStarted = (g) => g.status === "Final" || g.status_state === "in_progress";
+const hasStarted = (g) =>
+  g.status === "Final" || g.status_state === "in_progress";
 
 const TeamSide = ({ team, score, showScore }) => (
   <div className="team-side">
@@ -54,7 +55,9 @@ const TeamSide = ({ team, score, showScore }) => (
       className="team-logo"
       src={logoUrl(team.abbreviation)}
       alt={team.full_name}
-      onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+      onError={(e) => {
+        e.currentTarget.style.visibility = "hidden";
+      }}
     />
     <div className="team-name">{team.name}</div>
     <div className="team-city">{team.city}</div>
@@ -89,9 +92,15 @@ const Home = () => {
           null;
         setSelected(pick);
       })
-      .catch((e) => { if (!cancelled) setError(e.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const dates = Object.keys(byDate).sort();
@@ -123,7 +132,7 @@ const Home = () => {
         </div>
       )}
 
-                  <div className="games-grid">
+      <div className="games-grid">
         {games.map((g) => (
           <div key={g.id} className="game-card">
             <div className="game-time">{gameStatus(g)}</div>

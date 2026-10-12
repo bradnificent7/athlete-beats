@@ -1,4 +1,6 @@
-.music-title { margin-bottom: 0.25rem; }
+.music-title {
+  margin-bottom: 0.25rem;
+}
 
 .music-sub {
   color: rgba(255, 255, 255, 0.55);
@@ -23,8 +25,12 @@
   outline: none;
 }
 
-.music-form input:focus { border-color: #c471ed; }
-.music-form input::placeholder { color: rgba(255, 255, 255, 0.3); }
+.music-form input:focus {
+  border-color: #c471ed;
+}
+.music-form input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
 
 .music-form button {
   padding: 0.7rem 1.4rem;
@@ -36,8 +42,15 @@
   cursor: pointer;
 }
 
-.music-error { color: #ff4081; font-size: 0.85rem; margin-top: 8px; }
-.music-empty { color: rgba(255, 255, 255, 0.5); margin-top: 1.5rem; }
+.music-error {
+  color: #ff4081;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.music-empty {
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 1.5rem;
+}
 
 .music-list {
   display: grid;
@@ -53,7 +66,10 @@
   padding: 0.9rem;
 }
 
-.music-card iframe { border-radius: 12px; display: block; }
+.music-card iframe {
+  border-radius: 12px;
+  display: block;
+}
 
 .music-card-top {
   display: flex;
@@ -71,8 +87,14 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.music-badge.spotify { color: #1ed760; border-color: rgba(30, 215, 96, 0.5); }
-.music-badge.soundcloud { color: #ff7a3d; border-color: rgba(255, 122, 61, 0.5); }
+.music-badge.spotify {
+  color: #1ed760;
+  border-color: rgba(30, 215, 96, 0.5);
+}
+.music-badge.soundcloud {
+  color: #ff7a3d;
+  border-color: rgba(255, 122, 61, 0.5);
+}
 
 .music-remove {
   background: transparent;
@@ -82,9 +104,15 @@
   cursor: pointer;
 }
 
-.music-remove:hover { color: #f64f59; }
+.music-remove:hover {
+  color: #f64f59;
+}
 
-.music-tabs { display: flex; gap: 8px; margin: 0.75rem 0 1.25rem; }
+.music-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0.75rem 0 1.25rem;
+}
 
 .music-tab {
   padding: 0.45rem 1.1rem;
@@ -123,7 +151,10 @@
   transition: border-color 0.2s;
 }
 
-.result:hover, .result.active { border-color: #c471ed; }
+.result:hover,
+.result.active {
+  border-color: #c471ed;
+}
 
 .result img {
   width: 96px;
@@ -143,5 +174,13 @@
   overflow: hidden;
 }
 
-.result-channel { font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); margin-top: 3px; }
-.result-now { font-size: 0.7rem; color: #c471ed; margin-top: 3px; }
+.result-channel {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 3px;
+}
+.result-now {
+  font-size: 0.7rem;
+  color: #c471ed;
+  margin-top: 3px;
+}
