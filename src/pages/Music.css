@@ -184,3 +184,38 @@
   color: #c471ed;
   margin-top: 3px;
 }
+
+.music-form button {
+  transition: transform 0.08s ease, filter 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.music-form button:active {
+  transform: scale(0.95);
+  filter: brightness(0.8);
+}
+.music-form button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.btn-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  vertical-align: -0.1em;
+  animation: btnspin 0.7s linear infinite;
+}
+@keyframes btnspin {
+  to { transform: rotate(360deg); }
+}
+
+.result:active {
+  transform: scale(0.98);
+  border-color: #c471ed;
+}
+.music-tab:active {
+  transform: scale(0.96);
+}

@@ -9,7 +9,7 @@ import useProfile from "../hooks/useProfile";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
   const { current, playing, toggle, next, prev } = usePlayer();
   const profile = useProfile();
 
@@ -25,6 +25,10 @@ const AppLayout = ({ children }) => {
 
   const handleLogout = async () => {
     await signOut(auth);
+  };
+
+  const closeOnMobile = () => {
+  if (window.innerWidth <= 768) setSidebarOpen(false);
   };
 
   const navItems = [
@@ -83,6 +87,11 @@ const AppLayout = ({ children }) => {
       </nav>
 
       <div className="app-body">
+        {/* Sidebar open backdrop */}
+        {sidebarOpen && (
+         <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+        )}
+
         {/* Sidebar */}
         <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
           {/* User profile mini card */}
@@ -96,11 +105,15 @@ const AppLayout = ({ children }) => {
             )}
           </div>
 
-          {/* Nav items */}
+                    {/* Nav items */}
           <ul className="sidebar-nav">
             {navItems.map((item) => (
               <li key={item.label}>
-                <Link to={item.path} className="sidebar-link">
+                <Link
+                  to={item.path}
+                  className="sidebar-link"
+                  onClick={closeOnMobile}
+                >
                   <span className="sidebar-icon">{item.icon}</span>
                   {sidebarOpen && (
                     <span className="sidebar-label">{item.label}</span>
@@ -110,6 +123,10 @@ const AppLayout = ({ children }) => {
             ))}
           </ul>
 
+          <button className="sidebar-logout" onClick={handleLogout}>
+            🚪 Sign out
+          </button>
+          
           {/* Online friends */}
           {sidebarOpen && (
             <div className="sidebar-online">

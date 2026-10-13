@@ -78,17 +78,25 @@ export const PlayerProvider = ({ children }) => {
   const toggle = useCallback(() => {
     const p = playerRef.current;
     if (!p || !readyRef.current || !current) return;
-    setCollapsed(false);
     if (p.getPlayerState() === 1) p.pauseVideo();
     else p.playVideo();
   }, [current]);
 
   const toggleCollapse = () => {
-    if (!collapsed && readyRef.current && playerRef.current) {
-      playerRef.current.pauseVideo();
-    }
-    setCollapsed(!collapsed);
-  };
+  setCollapsed((c) => !c);
+};
+
+  const close = () => {
+  if (playerRef.current && readyRef.current) {
+    playerRef.current.stopVideo();
+  }
+  queueRef.current = [];
+  indexRef.current = -1;
+  setPlaying(false);
+  setCurrent(null);
+  setVisible(false);
+  setCollapsed(false);
+};
 
   useEffect(() => {
     let destroyed = false;
@@ -128,7 +136,7 @@ export const PlayerProvider = ({ children }) => {
     };
   }, []);
 
-  const value = {
+      const value = {
     current,
     playing,
     collapsed,
@@ -137,18 +145,32 @@ export const PlayerProvider = ({ children }) => {
     next,
     prev,
     toggleCollapse,
+    close,
   };
 
-  return (
+    return (
     <PlayerContext.Provider value={value}>
       {children}
       <div
         className={`yt-window ${visible ? "" : "hidden"} ${collapsed ? "collapsed" : ""}`}
       >
         <div className="yt-header">
-          <span className="yt-title">{current ? current.title : ""}</span>
-          <button className="yt-toggle" onClick={toggleCollapse}>
+          <span className="yt-title">
+          {current
+            ? playing
+              ? current.title
+              : `Tap ▶ to play · ${current.title}`
+            : ""}
+          </span>
+          <button
+            className="yt-toggle"
+            onClick={toggleCollapse}
+            title={collapsed ? "Expand" : "Minimize"}
+          >
             {collapsed ? "▲" : "▼"}
+          </button>
+          <button className="yt-toggle" onClick={close} title="Close">
+            ✕
           </button>
         </div>
         <div className="yt-frame">

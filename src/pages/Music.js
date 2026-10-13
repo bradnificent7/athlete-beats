@@ -53,6 +53,7 @@ const SearchTab = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    if (document.activeElement) document.activeElement.blur();
     if (!q.trim()) return;
     setLoading(true);
     setError("");
@@ -76,6 +77,7 @@ const SearchTab = () => {
           onChange={(e) => setQ(e.target.value)}
         />
         <button type="submit" disabled={loading}>
+          {loading && <span className="btn-spinner" />}
           {loading ? "Searching..." : "Search"}
         </button>
       </form>

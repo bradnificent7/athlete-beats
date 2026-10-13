@@ -480,22 +480,80 @@
 }
 
 /* ── Mobile responsive ── */
+/* ── Phone layout ── */
+.app-layout {
+  height: 100vh;
+  height: 100dvh;
+}
+.sidebar-logout,
+.sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .sidebar.open {
-    width: 64px;
+  /* top bar */
+  .navbar { padding: 0 0.75rem; }
+  .navbar-center,
+  .nav-user-info,
+  .nav-icon-btn { display: none; }
+  .nav-logo-text { font-size: 1rem; }
+  .nav-user { margin-left: auto; }
+
+  /* sidebar becomes a slide-out drawer */
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 260px !important;
+    z-index: 90;
+    background: rgba(10, 10, 15, 0.98);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
   }
-  .sidebar-label,
-  .sidebar-user-info,
-  .sidebar-online,
-  .nav-user-info {
-    display: none;
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 80;
   }
-  .navbar-center {
-    display: none;
+  .sidebar-link { padding: 0.9rem 1.25rem; }
+  .sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0.5rem 1rem 1rem;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.88rem;
+    cursor: pointer;
   }
-  .player-right {
-    display: none;
+
+  /* content */
+  .main-content { padding: 1rem; }
+
+  /* stops iOS from zooming in when you tap an input */
+  input,
+  textarea,
+  select { font-size: 16px !important; }
+
+  /* bottom player bar, with room for the iPhone home indicator */
+  .player-bar {
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding: 0 0.75rem env(safe-area-inset-bottom);
   }
+  .player-left { flex: 1 1 0; min-width: 0; gap: 10px; }
+  .player-center { flex: 0 0 auto; gap: 10px; }
+  .player-right { display: none; }
+  .player-thumb { width: 38px; height: 38px; }
+  .player-song,
+  .player-artist { max-width: 100%; }
 }
 
 .player-info {

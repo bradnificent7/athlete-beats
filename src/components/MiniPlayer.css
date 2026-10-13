@@ -26,17 +26,25 @@
 }
 
 .yt-title {
-  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   color: rgba(255, 255, 255, 0.8);
 }
+
 
 .yt-toggle {
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+}
+.yt-toggle:hover {
+  color: #fff;
 }
 
 .yt-frame {
@@ -51,6 +59,12 @@
   display: block;
 }
 
-.yt-window.collapsed .yt-frame {
-  display: none;
+.yt-window.collapsed {
+  width: 200px;
 }
+
+.yt-window.collapsed .yt-frame {
+  display: block;
+  height: 200px;
+}
+
