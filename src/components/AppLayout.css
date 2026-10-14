@@ -624,3 +624,20 @@ button.player-thumb:not(:disabled):active { transform: scale(0.93); }
   object-fit: cover;
   display: block;
 }
+
+/* Divider lines between sidebar pages */
+.sidebar li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar li:last-child {
+  border-bottom: none;
+}
+
+.sidebar-link {
+  border-radius: 10px;
+}
+
+.sidebar-link:hover {
+  background: rgba(196, 113, 237, 0.12);
+}

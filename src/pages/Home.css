@@ -43,10 +43,50 @@
 }
 
 /* Game cards */
+  /* One horizontal row of games */
 .games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+}
+
+.game-card {
+  flex: 0 0 300px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 600px) {
+  .game-card { flex-basis: 260px; }
+}
+
+/* Sport tabs */
+.sport-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 14px;
+}
+
+.sport-tab {
+  flex-shrink: 0;
+  padding: 0.5rem 1.1rem;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sport-tab:hover { border-color: #c471ed; color: white; }
+
+.sport-tab.active {
+  background: linear-gradient(135deg, #7b2ff7, #e040fb);
+  border-color: transparent;
+  color: white;
 }
 
 .game-card {

@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getGamesRange } from "../services/nba";
+import { SPORTS, getScores } from "../services/scores";
 import NewsFeed from "../components/NewsFeed";
 import "./Home.css";
 
 const toDateString = (d) => d.toLocaleDateString("en-CA"); // YYYY-MM-DD
-
-const addDays = (n) => {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return toDateString(d);
-};
 
 const prettyDate = (str) => {
   const [y, m, d] = str.split("-").map(Number);
@@ -21,51 +15,33 @@ const prettyDate = (str) => {
 };
 
 const gameStatus = (g) => {
-  if (g.status === "Final") return "Final";
-  if (g.status_state === "in_progress") return `Q${g.period} ${g.time || ""}`;
-  if (g.datetime) {
-    return new Date(g.datetime).toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-  return g.status;
+  if (g.label) return g.label;
+  return new Date(g.datetime).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 };
 
-const LOGO_FIXES = {
-  GSW: "gs",
-  NOP: "no",
-  NYK: "ny",
-  SAS: "sa",
-  UTA: "utah",
-  WAS: "wsh",
-};
-
-const logoUrl = (abbr) => {
-  const code = LOGO_FIXES[abbr] || abbr.toLowerCase();
-  return `https://a.espncdn.com/i/teamlogos/nba/500/${code}.png`;
-};
-
-const hasStarted = (g) =>
-  g.status === "Final" || g.status_state === "in_progress";
-
-const TeamSide = ({ team, score, showScore }) => (
+const TeamSide = ({ team, showScore }) => (
   <div className="team-side">
-    <img
-      className="team-logo"
-      src={logoUrl(team.abbreviation)}
-      alt={team.full_name}
-      onError={(e) => {
-        e.currentTarget.style.visibility = "hidden";
-      }}
-    />
+    {team.logo && (
+      <img
+        className="team-logo"
+        src={team.logo}
+        alt={team.name}
+        onError={(e) => {
+          e.currentTarget.style.visibility = "hidden";
+        }}
+      />
+    )}
     <div className="team-name">{team.name}</div>
-    <div className="team-city">{team.city}</div>
-    <div className="team-score">{showScore ? score : "–"}</div>
+    <div className="team-city">{team.city || "\u00A0"}</div>
+    <div className="team-score">{showScore ? team.score : "–"}</div>
   </div>
 );
 
 const Home = () => {
+  const [sport, setSport] = useState("nba");
   const [byDate, setByDate] = useState({});
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,24 +49,29 @@ const Home = () => {
 
   useEffect(() => {
     let cancelled = false;
-    getGamesRange(addDays(-3), addDays(21))
+    setLoading(true);
+    setError("");
+    setByDate({});
+    setSelected(null);
+
+    getScores(sport)
       .then((games) => {
         if (cancelled) return;
         const grouped = {};
         games.forEach((g) => {
-          const d = g.date.slice(0, 10);
+          const d = toDateString(new Date(g.datetime)); // local date
           (grouped[d] = grouped[d] || []).push(g);
         });
         setByDate(grouped);
 
         const dates = Object.keys(grouped).sort();
         const today = toDateString(new Date());
-        const pick =
+        setSelected(
           (grouped[today] && today) ||
-          dates.find((d) => d >= today) ||
-          dates[dates.length - 1] ||
-          null;
-        setSelected(pick);
+            dates.find((d) => d >= today) ||
+            dates[dates.length - 1] ||
+            null,
+        );
       })
       .catch((e) => {
         if (!cancelled) setError(e.message);
@@ -98,23 +79,39 @@ const Home = () => {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sport]);
 
+  const current = SPORTS.find((s) => s.key === sport);
   const dates = Object.keys(byDate).sort();
   const games = selected ? byDate[selected] || [] : [];
 
   return (
     <div className="home">
-      <h2 className="games-title">🏀 NBA Games</h2>
+      <h2 className="games-title">
+        {current.emoji} {current.label} Games
+      </h2>
+
+      <div className="sport-tabs">
+        {SPORTS.map((s) => (
+          <button
+            key={s.key}
+            className={`sport-tab ${s.key === sport ? "active" : ""}`}
+            onClick={() => setSport(s.key)}
+          >
+            {s.emoji} {s.label}
+          </button>
+        ))}
+      </div>
 
       {loading && <p className="home-msg">Loading games...</p>}
       {error && <p className="home-msg error">{error}</p>}
       {!loading && !error && dates.length === 0 && (
         <p className="home-msg">
-          No NBA games found in the next few weeks yet.
+          No {current.label} games in the next few weeks. It may be the offseason.
         </p>
       )}
 
@@ -137,23 +134,17 @@ const Home = () => {
           <div key={g.id} className="game-card">
             <div className="game-time">{gameStatus(g)}</div>
             <div className="matchup">
-              <TeamSide
-                team={g.visitor_team}
-                score={g.visitor_team_score}
-                showScore={hasStarted(g)}
-              />
+              <TeamSide team={g.away} showScore={g.state !== "pre"} />
               <div className="vs">@</div>
-              <TeamSide
-                team={g.home_team}
-                score={g.home_team_score}
-                showScore={hasStarted(g)}
-              />
+              <TeamSide team={g.home} showScore={g.state !== "pre"} />
             </div>
           </div>
         ))}
       </div>
 
-      <NewsFeed />
+      <div style={{ marginTop: 40 }}>
+        <NewsFeed />
+      </div>
     </div>
   );
 };
