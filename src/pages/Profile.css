@@ -176,6 +176,7 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
+
 .profile-names {
   display: flex;
   gap: 10px;
@@ -299,4 +300,19 @@
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+}
+
+.profile-top {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.profile-left { min-width: 0; }
+.profile-left .pp { margin-top: 0; }
+
+/* phones: stack, playlists go below the name box */
+@media (max-width: 768px) {
+  .profile-top { grid-template-columns: 1fr; }
+  .profile-left { order: 2; }
 }

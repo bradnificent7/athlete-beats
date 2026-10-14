@@ -6,11 +6,12 @@ import "./AppLayout.css";
 import { Link } from "react-router-dom";
 import { usePlayer } from "../context/PlayerContext";
 import useProfile from "../hooks/useProfile";
+import HoldButton from "./HoldButton";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
-  const { current, playing, toggle, next, prev } = usePlayer();
+  const { current, playing, toggle, next, prevTrack, seekBy, docked, toggleDock } = usePlayer();
   const profile = useProfile();
 
   const displayName =
@@ -126,7 +127,7 @@ const AppLayout = ({ children }) => {
           <button className="sidebar-logout" onClick={handleLogout}>
             🚪 Sign out
           </button>
-          
+
           {/* Online friends */}
           {sidebarOpen && (
             <div className="sidebar-online">
@@ -148,7 +149,18 @@ const AppLayout = ({ children }) => {
       {/* Bottom music player bar */}
       <div className="player-bar">
         <div className="player-left">
-          <div className="player-thumb">🎵</div>
+          <button
+            className="player-thumb"
+            onClick={toggleDock}
+            disabled={!current}
+            title={docked ? "Show player" : "Tuck player away"}
+          >
+            {current && /^https:\/\/i\.ytimg\.com\//.test(current.thumb || "") ? (
+              <img src={current.thumb} alt="" />
+            ) : (
+              "🎵"
+            )}
+          </button>
           <div className="player-info">
             <p className="player-song">
               {current ? current.title : "Not Playing"}
@@ -159,14 +171,46 @@ const AppLayout = ({ children }) => {
           </div>
         </div>
 
-        <div className="player-center">
-          <button className="player-btn" onClick={prev}>
+                <div className="player-center">
+          <button
+            className="player-btn seek-btn"
+            onClick={prevTrack}
+            title="Previous song"
+          >
             ⏮
           </button>
-          <button className="player-btn play-btn" onClick={toggle}>
-            {playing ? "⏸" : "▶️"}
+
+          <HoldButton
+            className="player-btn seek-btn"
+            title="Tap: back 10s · Hold: rewind"
+            onTap={() => seekBy(-10)}
+            onHold={() => seekBy(-5)}
+          >
+            ⏪
+          </HoldButton>
+
+          <button
+            className={`player-btn play-btn ${playing ? "is-pause" : "is-play"}`}
+            onClick={toggle}
+            title={playing ? "Pause" : "Play"}
+          >
+            {playing ? "⏸" : "▶"}
           </button>
-          <button className="player-btn" onClick={next}>
+
+          <HoldButton
+            className="player-btn seek-btn"
+            title="Tap: forward 10s · Hold: fast-forward"
+            onTap={() => seekBy(10)}
+            onHold={() => seekBy(5)}
+          >
+            ⏩
+          </HoldButton>
+
+          <button
+            className="player-btn seek-btn"
+            onClick={next}
+            title="Next song"
+          >
             ⏭
           </button>
         </div>

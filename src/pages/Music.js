@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { searchMusic } from "../services/youtube";
 import { usePlayer } from "../context/PlayerContext";
+import usePlaylists from "../hooks/usePlaylists";
 import "./Music.css";
+
 
 const SPOTIFY_RE =
   /open\.spotify\.com\/(?:intl-[a-z-]+\/)?(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/;
@@ -42,14 +44,30 @@ const loadSaved = () => {
   }
 };
 
+const safeThumb = (u) =>
+  typeof u === "string" && u.startsWith("https://i.ytimg.com/") ? u : null;
+
+const errText = (err) =>
+  err && err.code === "permission-denied"
+    ? "Playlists aren't switched on yet (check the Firestore rules)."
+    : (err && err.message) || "Something went wrong.";
+
 /* ── Search tab ── */
-const SearchTab = () => {
+const SearchTab = ({ playlists, createPlaylist, addTrack }) => {
   const { playTrack, current, playing } = usePlayer();
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+  const [menuFor, setMenuFor] = useState(null);
+  const [newName, setNewName] = useState("");
+  const [note, setNote] = useState("");
+
+  const flash = (m) => {
+    setNote(m);
+    setTimeout(() => setNote(""), 2500);
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -57,6 +75,7 @@ const SearchTab = () => {
     if (!q.trim()) return;
     setLoading(true);
     setError("");
+    setMenuFor(null);
     try {
       const r = await searchMusic(q);
       setResults(r);
@@ -65,6 +84,29 @@ const SearchTab = () => {
       setError(err.message);
     }
     setLoading(false);
+  };
+
+  const handleAdd = async (p, t) => {
+    try {
+      const r = await addTrack(p, t);
+      flash(r === "dup" ? `Already in ${p.name}` : `Added to ${p.name} ✓`);
+    } catch (err) {
+      flash(errText(err));
+    }
+    setMenuFor(null);
+  };
+
+  const handleCreate = async (e, t) => {
+    e.preventDefault();
+    try {
+      const name = newName.trim();
+      await createPlaylist(name, t);
+      flash(`Created "${name}" and added the song ✓`);
+      setNewName("");
+    } catch (err) {
+      flash(errText(err));
+    }
+    setMenuFor(null);
   };
 
   return (
@@ -90,24 +132,250 @@ const SearchTab = () => {
         {results.map((t) => {
           const isCurrent = current && current.id === t.id;
           return (
-            <button
-              key={t.id}
-              className={`result ${isCurrent ? "active" : ""}`}
-              onClick={() => playTrack(t, results)}
-            >
-              <img src={t.thumb} alt="" />
-              <div>
-                <div className="result-title">{t.title}</div>
-                <div className="result-channel">{t.channel}</div>
-                {isCurrent && (
-                  <div className="result-now">
-                    {playing ? "▶ Playing" : "Paused"}
-                  </div>
-                )}
-              </div>
-            </button>
+            <div key={t.id} className="result-wrap">
+              <button
+                className={`result ${isCurrent ? "active" : ""}`}
+                onClick={() => playTrack(t, results)}
+              >
+                <img src={t.thumb} alt="" />
+                <div>
+                  <div className="result-title">{t.title}</div>
+                  <div className="result-channel">{t.channel}</div>
+                  {isCurrent && (
+                    <div className="result-now">
+                      {playing ? "▶ Playing" : "Paused"}
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              <button
+                className="result-add"
+                title="Add to playlist"
+                aria-label="Add to playlist"
+                onClick={() => setMenuFor(menuFor === t.id ? null : t.id)}
+              >
+                ＋
+              </button>
+
+              {menuFor === t.id && (
+                <div className="add-menu">
+                  {playlists.length === 0 && (
+                    <p className="add-menu-empty">No playlists yet</p>
+                  )}
+                  {playlists.map((p) => (
+                    <button key={p.id} onClick={() => handleAdd(p, t)}>
+                      <span>{p.name}</span>
+                      <span className="add-menu-count">{p.tracks.length}</span>
+                    </button>
+                  ))}
+                  <form onSubmit={(e) => handleCreate(e, t)}>
+                    <input
+                      placeholder="New playlist..."
+                      value={newName}
+                      maxLength={40}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                    <button type="submit">Create</button>
+                  </form>
+                </div>
+              )}
+            </div>
           );
         })}
+      </div>
+
+      {note && <div className="music-note">{note}</div>}
+    </div>
+  );
+};
+
+const PL_COLORS = ["#c471ed", "#f64f59", "#ff7eb3", "#4facfe", "#43e97b", "#f9d423"];
+
+const toRgb = (hex) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return "196,113,237";
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+};
+
+const shuffled = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+/* ── Playlists tab ── */
+const PlaylistsTab = ({
+  playlists,
+  ready,
+  error,
+  createPlaylist,
+  removeTrack,
+  deletePlaylist,
+  setColor,
+}) => {
+  const { playTrack, current } = usePlayer();
+  const [name, setName] = useState("");
+  const [open, setOpen] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [paletteFor, setPaletteFor] = useState(null);
+  const colorTimer = useRef(null);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setMsg("");
+    try {
+      const id = await createPlaylist(name);
+      setName("");
+      setOpen(id);
+    } catch (err) {
+      setMsg(errText(err));
+    }
+  };
+
+  const handleDelete = (p) => {
+    if (!window.confirm(`Delete "${p.name}"?`)) return;
+    deletePlaylist(p.id).catch((err) => setMsg(errText(err)));
+  };
+
+  return (
+    <div>
+      <form className="music-form" onSubmit={handleCreate}>
+        <input
+          type="text"
+          placeholder="New playlist name..."
+          value={name}
+          maxLength={40}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button type="submit">Create</button>
+      </form>
+      {msg && <p className="music-error">{msg}</p>}
+      {error && <p className="music-error">{error}</p>}
+      {ready && !error && playlists.length === 0 && (
+        <p className="music-empty">
+          No playlists yet. Create one above, then use the ＋ on any search
+          result.
+        </p>
+      )}
+
+          <div className="playlists">
+            {playlists.map((p) => (
+              <div
+            key={p.id}
+            className="playlist-card"
+            style={{ "--pl": toRgb(p.color) }}
+          >
+            <div className="playlist-head">
+                <button
+                  className="pl-gear"
+                  aria-label="Playlist color"
+                  onClick={() => setPaletteFor(paletteFor === p.id ? null : p.id)}
+                >
+                  ⚙
+                </button>
+
+                <button
+                  className="playlist-title"
+                  onClick={() => setOpen(open === p.id ? null : p.id)}
+                >
+                  <span className="playlist-name">
+                    {open === p.id ? "▾" : "▸"} {p.name}
+                  </span>
+                  <span className="playlist-count">{p.tracks.length} songs</span>
+                </button>
+
+                <div className="playlist-actions">
+                  <button
+                    disabled={!p.tracks.length}
+                    onClick={() => playTrack(p.tracks[0], p.tracks)}
+                  >
+                    ▶ Play all
+                  </button>
+                  <button
+                    disabled={p.tracks.length < 2}
+                    onClick={() => {
+                      const s = shuffled(p.tracks);
+                      playTrack(s[0], s);
+                    }}
+                  >
+                    🔀 Shuffle
+                  </button>
+                  <button onClick={() => handleDelete(p)}>Delete</button>
+                </div>
+              </div>
+
+              {paletteFor === p.id && (
+                <div className="color-pop">
+                  {PL_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      className={`swatch ${p.color === c ? "on" : ""}`}
+                      style={{ background: c }}
+                      aria-label={`Use color ${c}`}
+                      onClick={() => setColor(p, c).catch((err) => setMsg(errText(err)))}
+                    />
+                  ))}
+                  <label className="wheel" title="Color wheel">
+                    <input
+                      type="color"
+                      defaultValue={p.color || "#c471ed"}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        clearTimeout(colorTimer.current);
+                        colorTimer.current = setTimeout(
+                          () => setColor(p, v).catch((err) => setMsg(errText(err))),
+                          500,
+                        );
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+
+            {open === p.id && (
+              <div className="playlist-tracks">
+                {p.tracks.length === 0 && (
+                  <p className="music-empty">
+                    Empty. Add songs from the Search tab.
+                  </p>
+                )}
+                {p.tracks.map((t, i) => (
+                  <div
+                    key={t.id}
+                    className={`playlist-track ${
+                      current && current.id === t.id ? "active" : ""
+                    }`}
+                  >
+                    <button
+                      className="playlist-play"
+                      onClick={() => playTrack(t, p.tracks)}
+                    >
+                      <span className="track-num">{i + 1}</span>
+                      <div>
+                        <div className="result-title">{t.title}</div>
+                        <div className="result-channel">{t.channel}</div>
+                      </div>
+                    </button>
+                    <button
+                      className="playlist-remove"
+                      title="Remove from playlist"
+                      onClick={() =>
+                        removeTrack(p, t.id).catch((err) => setMsg(errText(err)))
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -196,27 +464,70 @@ const LinkTab = () => {
 };
 
 /* ── Page ── */
+const useWide = () => {
+  const query = "(min-width: 960px)";
+  const [wide, setWide] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    const onChange = () => setWide(m.matches);
+    m.addEventListener("change", onChange);
+    return () => m.removeEventListener("change", onChange);
+  }, []);
+  return wide;
+};
+
 const Music = () => {
   const [tab, setTab] = useState("search");
+  const pl = usePlaylists();
+  const wide = useWide();
+  const activeTab = wide && tab === "playlists" ? "search" : tab;
 
   return (
     <div className="music">
       <h2 className="music-title">🎵 Music</h2>
       <div className="music-tabs">
         <button
-          className={`music-tab ${tab === "search" ? "active" : ""}`}
+          className={`music-tab ${activeTab === "search" ? "active" : ""}`}
           onClick={() => setTab("search")}
         >
           🔍 Search
         </button>
+        {!wide && (
+          <button
+            className={`music-tab ${activeTab === "playlists" ? "active" : ""}`}
+            onClick={() => setTab("playlists")}
+          >
+            📚 Playlists
+          </button>
+        )}
         <button
-          className={`music-tab ${tab === "link" ? "active" : ""}`}
+          className={`music-tab ${activeTab === "link" ? "active" : ""}`}
           onClick={() => setTab("link")}
         >
           🔗 Add by link
         </button>
       </div>
-      {tab === "search" ? <SearchTab /> : <LinkTab />}
+
+      <div className="music-layout">
+        <div className="music-main">
+          {activeTab === "search" && (
+            <SearchTab
+              playlists={pl.playlists}
+              createPlaylist={pl.createPlaylist}
+              addTrack={pl.addTrack}
+            />
+          )}
+          {activeTab === "playlists" && <PlaylistsTab {...pl} />}
+          {activeTab === "link" && <LinkTab />}
+        </div>
+
+        {wide && (
+          <aside className="music-side">
+            <h3 className="music-side-title">📚 My playlists</h3>
+            <PlaylistsTab {...pl} />
+          </aside>
+        )}
+      </div>
     </div>
   );
 };

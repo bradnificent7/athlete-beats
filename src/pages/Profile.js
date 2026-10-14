@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import "./Profile.css";
 import { toEmbed } from "../services/embed";
+import ProfilePlaylists from "../components/ProfilePlaylists";
 
 const ROLES = [
   { id: "fan", label: "🏆 Fan" },
@@ -348,6 +349,7 @@ const Profile = () => {
             ))}
           </div>
           <p className="profile-soon">
+            <ProfilePlaylists uid={user.uid} />
             Friends will go here once following is built.
           </p>
         </section>
