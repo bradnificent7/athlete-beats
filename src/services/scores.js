@@ -51,21 +51,61 @@ const normalize = (e) => {
   };
 };
 
+const fetchFeed = async (feed, dates) => {
+  const get = async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Scores ${res.status}`);
+    return res.json();
+  };
+
+  const tries = [
+    `${BASE}/${feed}/scoreboard?dates=${dates}&limit=500`,
+    `${BASE}/${feed}/scoreboard?dates=${dates}`,
+    `${BASE}/${feed}/scoreboard`, // this week only
+  ];
+
+  let lastErr;
+  for (let i = 0; i < tries.length; i++) {
+    try {
+      const data = await get(tries[i]);
+      let events = data.events || [];
+
+      // The plain scoreboard only shows this week. For weekly sports (NFL),
+      // also grab the next 3 weeks so upcoming games show up.
+      if (i === tries.length - 1 && data.week && data.week.number) {
+        const type = (data.season && data.season.type) || 2;
+        const extra = await Promise.allSettled(
+          [1, 2, 3].map((n) =>
+            get(`${BASE}/${feed}/scoreboard?seasontype=${type}&week=${data.week.number + n}`),
+          ),
+        );
+        extra.forEach((r) => {
+          if (r.status === "fulfilled") events = events.concat(r.value.events || []);
+        });
+      }
+
+      const seen = new Set();
+      return events.filter((e) => !seen.has(e.id) && seen.add(e.id)).map(normalize);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+};
+
 export async function getScores(sportKey, fromDays = -3, toDays = 21) {
   const sport = SPORTS.find((s) => s.key === sportKey);
   const dates = `${ymd(fromDays)}-${ymd(toDays)}`;
 
   const results = await Promise.allSettled(
-    sport.feeds.map(async (feed) => {
-      const res = await fetch(`${BASE}/${feed}/scoreboard?dates=${dates}&limit=500`);
-      if (!res.ok) throw new Error(`Scores ${res.status}`);
-      const data = await res.json();
-      return (data.events || []).map(normalize);
-    }),
+    sport.feeds.map((feed) => fetchFeed(feed, dates)),
   );
 
   const ok = results.filter((r) => r.status === "fulfilled");
-  if (ok.length === 0) throw new Error("Couldn't load scores right now.");
+  if (ok.length === 0) {
+    const why = results[0].reason && results[0].reason.message;
+    throw new Error(`Couldn't load scores right now.${why ? ` (${why})` : ""}`);
+  }
 
   return ok
     .flatMap((r) => r.value)
