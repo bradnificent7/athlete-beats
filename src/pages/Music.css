@@ -349,6 +349,7 @@
   align-items: center;
   gap: 8px;
   padding: 0 34px;
+  cursor: pointer;
 }
 
 .playlist-card .playlist-title {
@@ -484,4 +485,101 @@
   width: 20px;
   height: 20px;
   font-size: 0.62rem;
+}
+
+/* ── add to playlist ── */
+.music-tabs { flex-wrap: wrap; }
+
+.result-wrap { position: relative; }
+.result-wrap .result { width: 100%; padding-right: 3.2rem; }
+
+.result-add {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.result-add:active { transform: translateY(-50%) scale(0.92); }
+
+.add-menu {
+  position: absolute;
+  right: 8px;
+  top: calc(100% - 4px);
+  z-index: 20;
+  width: min(270px, 92%);
+  background: rgba(18, 18, 26, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.add-menu > button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: none;
+  background: transparent;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+}
+.add-menu > button:hover { background: rgba(196, 113, 237, 0.15); }
+.add-menu-count { color: rgba(255, 255, 255, 0.4); }
+.add-menu-empty {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8rem;
+  padding: 4px 6px;
+}
+.add-menu form { display: flex; gap: 6px; margin-top: 6px; }
+.add-menu input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.82rem;
+}
+.add-menu form button {
+  padding: 0 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7b2ff7, #e040fb);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.music-note {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 96px;
+  z-index: 300;
+  padding: 0.6rem 1.1rem;
+  border-radius: 99px;
+  background: rgba(30, 30, 40, 0.97);
+  border: 1px solid rgba(196, 113, 237, 0.5);
+  color: #fff;
+  font-size: 0.85rem;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.playlist-actions button,
+.pl-gear {
+  cursor: pointer;
 }

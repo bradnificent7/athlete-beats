@@ -3,6 +3,7 @@ import { searchMusic } from "../services/youtube";
 import { usePlayer } from "../context/PlayerContext";
 import usePlaylists from "../hooks/usePlaylists";
 import "./Music.css";
+import { cleanScUrl, cleanScSetUrl, getScTrack, importScSet } from "../services/soundcloud";
 
 
 const SPOTIFY_RE =
@@ -44,8 +45,6 @@ const loadSaved = () => {
   }
 };
 
-const safeThumb = (u) =>
-  typeof u === "string" && u.startsWith("https://i.ytimg.com/") ? u : null;
 
 const errText = (err) =>
   err && err.code === "permission-denied"
@@ -270,18 +269,23 @@ const PlaylistsTab = ({
             className="playlist-card"
             style={{ "--pl": toRgb(p.color) }}
           >
-            <div className="playlist-head">
+             <div
+                className="playlist-head"
+                onClick={() => setOpen(open === p.id ? null : p.id)}
+              >
                 <button
                   className="pl-gear"
                   aria-label="Playlist color"
-                  onClick={() => setPaletteFor(paletteFor === p.id ? null : p.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPaletteFor(paletteFor === p.id ? null : p.id);
+                  }}
                 >
                   ⚙
                 </button>
 
                 <button
                   className="playlist-title"
-                  onClick={() => setOpen(open === p.id ? null : p.id)}
                 >
                   <span className="playlist-name">
                     {open === p.id ? "▾" : "▸"} {p.name}
@@ -289,7 +293,7 @@ const PlaylistsTab = ({
                   <span className="playlist-count">{p.tracks.length} songs</span>
                 </button>
 
-                <div className="playlist-actions">
+                <div className="playlist-actions" onClick={(e) => e.stopPropagation()}>
                   <button
                     disabled={!p.tracks.length}
                     onClick={() => playTrack(p.tracks[0], p.tracks)}
@@ -382,10 +386,19 @@ const PlaylistsTab = ({
 };
 
 /* ── Add by link tab ── */
-const LinkTab = () => {
+/* ── Add by link tab ── */
+const scThumb = (u) =>
+  typeof u === "string" && /^https:\/\/[a-z0-9-]+\.sndcdn\.com\//.test(u) ? u : null;
+
+  function LinkTab({ playlists, createPlaylist, addTrack, createPlaylistWithTracks }) {
+  const { playTrack, current, playing } = usePlayer();
   const [input, setInput] = useState("");
   const [items, setItems] = useState(loadSaved);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [menuFor, setMenuFor] = useState(null);
+  const [newName, setNewName] = useState("");
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     try {
@@ -395,10 +408,52 @@ const LinkTab = () => {
     }
   }, [items]);
 
-  const handleAdd = (e) => {
+  const flash = (m) => {
+    setNote(m);
+    setTimeout(() => setNote(""), 2500);
+  };
+
+  const scTracks = items.filter((i) => i.source === "soundcloud");
+
+  const handleAdd = async (e) => {
     e.preventDefault();
     setError("");
-    const parsed = parseLink(input);
+    const raw = input.trim();
+      const setUrl = cleanScSetUrl(raw);
+  if (setUrl) {
+    setBusy(true);
+    try {
+      const tracks = await importScSet(setUrl);
+      const name = setUrl.split("/").pop().replace(/-/g, " ").slice(0, 40);
+      await createPlaylistWithTracks(name, tracks);
+      flash(`Imported ${tracks.length} songs into "${name}" ✓`);
+      setInput("");
+    } catch (err) {
+      setError(err.message || "Couldn't import that playlist.");
+    }
+    setBusy(false);
+    return;
+  }
+
+    const scUrl = cleanScUrl(raw);
+    if (scUrl) {
+      if (items.some((i) => i.id === scUrl)) {
+        setError("That one is already on your list.");
+        return;
+      }
+      setBusy(true);
+      const track = await getScTrack(scUrl);
+      setBusy(false);
+      setItems([{ ...track, platform: "soundcloud" }, ...items]);
+      setInput("");
+      return;
+    }
+    if (SOUNDCLOUD_RE.test(raw)) {
+      setError("Paste a single SoundCloud track link (not a profile or playlist).");
+      return;
+    }
+
+    const parsed = parseLink(raw);
     if (!parsed) {
       setError(
         "Paste a Spotify or SoundCloud link (open.spotify.com/... or soundcloud.com/...).",
@@ -413,52 +468,147 @@ const LinkTab = () => {
     setInput("");
   };
 
-  const handleRemove = (id) => setItems(items.filter((i) => i.id !== id));
+  const handleRemove = (id) => {
+    setItems(items.filter((i) => i.id !== id));
+    setMenuFor(null);
+  };
+
+  const handleAddTo = async (p, t) => {
+    try {
+      const r = await addTrack(p, t);
+      flash(r === "dup" ? `Already in ${p.name}` : `Added to ${p.name} ✓`);
+    } catch (err) {
+      flash(errText(err));
+    }
+    setMenuFor(null);
+  };
+
+  const handleCreate = async (e, t) => {
+    e.preventDefault();
+    try {
+      const name = newName.trim();
+      await createPlaylist(name, t);
+      flash(`Created "${name}" and added the song ✓`);
+      setNewName("");
+    } catch (err) {
+      flash(errText(err));
+    }
+    setMenuFor(null);
+  };
 
   return (
     <div>
       <form className="music-form" onSubmit={handleAdd}>
         <input
           type="text"
-          placeholder="https://open.spotify.com/track/..."
+          placeholder="https://soundcloud.com/artist/song"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button type="submit">Add</button>
+        <button type="submit" disabled={busy}>
+          {busy ? "Adding..." : "Add"}
+        </button>
       </form>
       {error && <p className="music-error">{error}</p>}
       {items.length === 0 && (
         <p className="music-empty">
-          Nothing here yet. Add your first song above.
+          Nothing here yet. Paste a SoundCloud or Spotify link above.
         </p>
       )}
 
       <div className="music-list">
-        {items.map((item) => (
-          <div key={item.id} className="music-card">
-            <div className="music-card-top">
-              <span className={`music-badge ${item.platform}`}>
-                {item.platform === "spotify" ? "Spotify" : "SoundCloud"}
-              </span>
+        {items.map((item) => {
+          if (item.source !== "soundcloud") {
+            // Spotify (and older saved links) keep their own embedded player
+            return (
+              <div key={item.id} className="music-card">
+                <div className="music-card-top">
+                  <span className={`music-badge ${item.platform}`}>
+                    {item.platform === "spotify" ? "Spotify" : "SoundCloud"}
+                  </span>
+                  <button
+                    className="music-remove"
+                    onClick={() => handleRemove(item.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <iframe
+                  title={`${item.platform}-${item.id}`}
+                  src={item.src}
+                  width="100%"
+                  height={item.height}
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
+              </div>
+            );
+          }
+
+          const isCurrent = current && current.id === item.id;
+          return (
+            <div key={item.id} className="result-wrap">
               <button
-                className="music-remove"
-                onClick={() => handleRemove(item.id)}
+                className={`result ${isCurrent ? "active" : ""}`}
+                onClick={() => playTrack(item, scTracks)}
               >
-                Remove
+                {scThumb(item.thumb) ? (
+                  <img src={scThumb(item.thumb)} alt="" />
+                ) : (
+                  <span className="thumb-fallback">🎵</span>
+                )}
+                <div>
+                  <div className="result-title">{item.title}</div>
+                  <div className="result-channel">{item.channel} · SoundCloud</div>
+                  {isCurrent && (
+                    <div className="result-now">
+                      {playing ? "▶ Playing" : "Paused"}
+                    </div>
+                  )}
+                </div>
               </button>
+
+              <button
+                className="result-add"
+                title="Add to playlist"
+                aria-label="Add to playlist"
+                onClick={() => setMenuFor(menuFor === item.id ? null : item.id)}
+              >
+                ＋
+              </button>
+
+              {menuFor === item.id && (
+                <div className="add-menu">
+                  {playlists.length === 0 && (
+                    <p className="add-menu-empty">No playlists yet</p>
+                  )}
+                  {playlists.map((p) => (
+                    <button key={p.id} onClick={() => handleAddTo(p, item)}>
+                      <span>{p.name}</span>
+                      <span className="add-menu-count">{p.tracks.length}</span>
+                    </button>
+                  ))}
+                  <form onSubmit={(e) => handleCreate(e, item)}>
+                    <input
+                      placeholder="New playlist..."
+                      value={newName}
+                      maxLength={40}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                    <button type="submit">Create</button>
+                  </form>
+                  <button onClick={() => handleRemove(item.id)}>
+                    <span>🗑 Remove from this list</span>
+                  </button>
+                </div>
+              )}
             </div>
-            <iframe
-              title={`${item.platform}-${item.id}`}
-              src={item.src}
-              width="100%"
-              height={item.height}
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {note && <div className="music-note">{note}</div>}
     </div>
   );
 };
@@ -518,7 +668,14 @@ const Music = () => {
             />
           )}
           {activeTab === "playlists" && <PlaylistsTab {...pl} />}
-          {activeTab === "link" && <LinkTab />}
+           {activeTab === "link" && (
+            <LinkTab
+              playlists={pl.playlists}
+              createPlaylist={pl.createPlaylist}
+              addTrack={pl.addTrack}
+              createPlaylistWithTracks={pl.createPlaylistWithTracks}
+            />
+          )}
         </div>
 
         {wide && (

@@ -155,7 +155,7 @@ const AppLayout = ({ children }) => {
             disabled={!current}
             title={docked ? "Show player" : "Tuck player away"}
           >
-            {current && /^https:\/\/i\.ytimg\.com\//.test(current.thumb || "") ? (
+            {current && /^https:\/\/(i\.ytimg\.com|[a-z0-9-]+\.sndcdn\.com)\//.test(current.thumb || "") ? (
               <img src={current.thumb} alt="" />
             ) : (
               "🎵"
@@ -216,7 +216,9 @@ const AppLayout = ({ children }) => {
         </div>
 
         <div className="player-right">
-          <span className="player-platform">YouTube</span>
+          <span className="player-platform">
+            {current && current.source === "soundcloud" ? "SoundCloud" : "YouTube"}
+          </span>
         </div>
       </div>
     </div>

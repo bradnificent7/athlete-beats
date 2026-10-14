@@ -28,6 +28,33 @@ const loadYouTubeApi = () => {
   return apiPromise;
 };
 
+let scPromise = null;
+const loadSoundCloudApi = () => {
+  if (window.SC && window.SC.Widget) return Promise.resolve(window.SC);
+  if (scPromise) return scPromise;
+  scPromise = new Promise((resolve, reject) => {
+    const tag = document.createElement("script");
+    tag.src = "https://w.soundcloud.com/player/api.js";
+    tag.onload = () => resolve(window.SC);
+    tag.onerror = reject;
+    document.head.appendChild(tag);
+  });
+  return scPromise;
+};
+
+const scEmbedSrc = (url) =>
+  `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}` +
+  `&auto_play=true&visual=true&color=%23c471ed&hide_related=true` +
+  `&show_comments=false&show_reposts=false`;
+
+const SC_LOAD_OPTS = {
+  auto_play: true,
+  visual: true,
+  hide_related: true,
+  show_comments: false,
+  show_reposts: false,
+};
+
 const loadPref = (key, fallback) => {
   try {
     const v = JSON.parse(localStorage.getItem(key));
@@ -48,14 +75,18 @@ export const PlayerProvider = ({ children }) => {
   const touchY = useRef(null);
   const winRef = useRef(null);
   const dragRef = useRef(null);
+  const engineRef = useRef("youtube");
+  const scFrameRef = useRef(null);
+  const scRef = useRef(null);
 
   /* ── state ── */
   const [current, setCurrent] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [engine, setEngine] = useState("youtube");
+  const [scSrc, setScSrc] = useState("");
   const [desk, setDesk] = useState(
-    
     () => window.matchMedia("(min-width: 769px)").matches,
   );
   const [pos, setPos] = useState(() => loadPref("ab_mini_pos", null));
@@ -68,6 +99,21 @@ export const PlayerProvider = ({ children }) => {
     setCurrent(track);
     setVisible(true);
     setCollapsed(false);
+
+    if (track.source === "soundcloud") {
+      engineRef.current = "soundcloud";
+      setEngine("soundcloud");
+      setPlaying(false);
+      if (readyRef.current && playerRef.current) playerRef.current.pauseVideo();
+      const url = track.url || track.id;
+      if (scRef.current) scRef.current.load(url, SC_LOAD_OPTS);
+      else setScSrc((prev) => prev || scEmbedSrc(url));
+      return;
+    }
+
+    engineRef.current = "youtube";
+    setEngine("youtube");
+    if (scRef.current) scRef.current.pause();
     if (readyRef.current && playerRef.current) {
       playerRef.current.loadVideoById(track.id);
     } else {
@@ -88,14 +134,19 @@ export const PlayerProvider = ({ children }) => {
   const next = useCallback(() => playAt(indexRef.current + 1), [playAt]);
   nextRef.current = next;
 
+  // Previous song, or restart the song if you're on the first one.
   const prevTrack = useCallback(() => {
-  if (indexRef.current <= 0) {
-    const p = playerRef.current;
-    if (p && readyRef.current) p.seekTo(0, true);
-    return;
-  }
-  playAt(indexRef.current - 1);
-}, [playAt]);
+    if (indexRef.current <= 0) {
+      if (engineRef.current === "soundcloud") {
+        if (scRef.current) scRef.current.seekTo(0);
+      } else {
+        const p = playerRef.current;
+        if (p && readyRef.current) p.seekTo(0, true);
+      }
+      return;
+    }
+    playAt(indexRef.current - 1);
+  }, [playAt]);
 
   const playTrack = useCallback(
     (track, list) => {
@@ -109,27 +160,31 @@ export const PlayerProvider = ({ children }) => {
   );
 
   const toggle = useCallback(() => {
+    if (!current) return;
+    if (engineRef.current === "soundcloud") {
+      if (scRef.current) scRef.current.toggle();
+      return;
+    }
     const p = playerRef.current;
-    if (!p || !readyRef.current || !current) return;
+    if (!p || !readyRef.current) return;
     if (p.getPlayerState() === 1) p.pauseVideo();
     else p.playVideo();
   }, [current]);
 
-  // Tap on rewind: restart the song, or go to the previous one if you
-  // are only a few seconds in.
-  const restartOrPrev = useCallback(() => {
-    const p = playerRef.current;
-    if (!p || !readyRef.current) return;
-    const t = p.getCurrentTime ? p.getCurrentTime() : 0;
-    if (t > 3 || indexRef.current <= 0) {
-      p.seekTo(0, true);
-    } else {
-      playAt(indexRef.current - 1);
-    }
-  }, [playAt]);
-
-  // Hold rewind / fast-forward: jump a few seconds at a time.
+  // Jump a few seconds forward or back (used by the ⏪ ⏩ buttons).
   const seekBy = useCallback((secs) => {
+    if (engineRef.current === "soundcloud") {
+      const w = scRef.current;
+      if (!w) return;
+      w.getPosition((ms) =>
+        w.getDuration((dur) => {
+          let t = ms + secs * 1000;
+          t = Math.max(0, dur ? Math.min(t, dur - 500) : t);
+          w.seekTo(t);
+        }),
+      );
+      return;
+    }
     const p = playerRef.current;
     if (!p || !readyRef.current) return;
     const dur = p.getDuration ? p.getDuration() : 0;
@@ -142,6 +197,7 @@ export const PlayerProvider = ({ children }) => {
     if (playerRef.current && readyRef.current) {
       playerRef.current.stopVideo();
     }
+    if (scRef.current) scRef.current.pause();
     queueRef.current = [];
     indexRef.current = -1;
     setPlaying(false);
@@ -150,11 +206,30 @@ export const PlayerProvider = ({ children }) => {
     setCollapsed(false);
   };
 
-  /* ── mini player window: minimize, resize ── */
+  /* ── mini player window: minimize, resize, dock ── */
   const toggleCollapse = () => setCollapsed((c) => !c);
 
   const cycleSize = () =>
     setSize((s) => (s === "s" ? "m" : s === "m" ? "l" : "s"));
+
+  // Tuck the player into the bottom-left icon, or pop it back out.
+  const toggleDock = () => {
+    if (docked) {
+      setDocked(false);
+      return;
+    }
+    const w = winRef.current;
+    const icon = document.querySelector(".player-thumb");
+    if (w && icon) {
+      const a = w.getBoundingClientRect();
+      const b = icon.getBoundingClientRect();
+      setDockVec({
+        dx: b.left + b.width / 2 - (a.left + a.width / 2),
+        dy: b.top + b.height / 2 - (a.top + a.height / 2),
+      });
+    }
+    setDocked(true);
+  };
 
   // Phone: swipe down on the header to minimize, swipe up to expand.
   const onTouchStart = (e) => {
@@ -220,6 +295,7 @@ export const PlayerProvider = ({ children }) => {
             }
           },
           onStateChange: (e) => {
+            if (engineRef.current !== "youtube") return;
             if (e.data === YT.PlayerState.PLAYING) setPlaying(true);
             else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
             else if (e.data === YT.PlayerState.ENDED) {
@@ -227,7 +303,9 @@ export const PlayerProvider = ({ children }) => {
               nextRef.current();
             }
           },
-          onError: () => nextRef.current(),
+          onError: () => {
+            if (engineRef.current === "youtube") nextRef.current();
+          },
         },
       });
     });
@@ -240,6 +318,37 @@ export const PlayerProvider = ({ children }) => {
       }
     };
   }, []);
+
+  // Connect to the SoundCloud player the first time one is shown.
+  useEffect(() => {
+    if (!scSrc || scRef.current) return;
+    let cancelled = false;
+    loadSoundCloudApi()
+      .then((SC) => {
+        if (cancelled || !scFrameRef.current || scRef.current) return;
+        const w = SC.Widget(scFrameRef.current);
+        scRef.current = w;
+        w.bind(SC.Widget.Events.PLAY, () => {
+          if (engineRef.current === "soundcloud") setPlaying(true);
+        });
+        w.bind(SC.Widget.Events.PAUSE, () => {
+          if (engineRef.current === "soundcloud") setPlaying(false);
+        });
+        w.bind(SC.Widget.Events.FINISH, () => {
+          if (engineRef.current === "soundcloud") {
+            setPlaying(false);
+            nextRef.current();
+          }
+        });
+        w.bind(SC.Widget.Events.ERROR, () => {
+          if (engineRef.current === "soundcloud") nextRef.current();
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [scSrc]);
 
   // Track whether we're on a laptop/PC-sized screen.
   useEffect(() => {
@@ -268,29 +377,8 @@ export const PlayerProvider = ({ children }) => {
     if (x !== pos.x || y !== pos.y) setPos({ x, y });
   }, [pos, size, collapsed, visible, desk]);
 
-  // Tuck the player into the bottom-left icon, or pop it back out.
-  const toggleDock = () => {
-    if (docked) {
-      setDocked(false);
-      return;
-    }
-    const w = winRef.current;
-    const icon = document.querySelector(".player-thumb");
-    if (w && icon) {
-      const a = w.getBoundingClientRect();
-      const b = icon.getBoundingClientRect();
-      setDockVec({
-        dx: b.left + b.width / 2 - (a.left + a.width / 2),
-        dy: b.top + b.height / 2 - (a.top + a.height / 2),
-      });
-    }
-    setDocked(true);
-  };
-
-  
-
   /* ── context value ── */
-    const value = {
+  const value = {
     current,
     playing,
     collapsed,
@@ -299,7 +387,6 @@ export const PlayerProvider = ({ children }) => {
     toggle,
     next,
     prevTrack,
-    restartOrPrev,
     seekBy,
     toggleCollapse,
     toggleDock,
@@ -312,7 +399,7 @@ export const PlayerProvider = ({ children }) => {
       {children}
       <div
         ref={winRef}
-        className={`yt-window size-${size} ${visible ? "" : "hidden"} ${collapsed ? "collapsed" : ""} ${docked ? "docked" : ""}`}
+        className={`yt-window size-${size} src-${engine} ${visible ? "" : "hidden"} ${collapsed ? "collapsed" : ""} ${docked ? "docked" : ""}`}
         style={{
           ...(desk && pos
             ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" }
@@ -360,6 +447,15 @@ export const PlayerProvider = ({ children }) => {
         </div>
         <div className="yt-frame">
           <div id="yt-player" />
+          {scSrc && (
+            <iframe
+              ref={scFrameRef}
+              className="sc-frame"
+              title="SoundCloud player"
+              src={scSrc}
+              allow="autoplay"
+            />
+          )}
         </div>
       </div>
     </PlayerContext.Provider>

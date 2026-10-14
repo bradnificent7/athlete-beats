@@ -17,12 +17,15 @@ const MAX_TRACKS = 100;
 const MAX_PLAYLISTS = 20;
 
 const lite = (t) => ({
-  id: String(t.id),
+  id: String(t.id).slice(0, 300),
+  source: t.source === "soundcloud" ? "soundcloud" : "youtube",
   title: String(t.title || "").slice(0, 150),
   channel: String(t.channel || "").slice(0, 100),
   thumb: String(t.thumb || ""),
+  ...(t.source === "soundcloud"
+    ? { url: String(t.url || t.id).slice(0, 300) }
+    : {}),
 });
-
 export default function usePlaylists() {
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState([]);
@@ -66,6 +69,26 @@ export default function usePlaylists() {
         {
           name: clean,
           tracks: firstTrack ? [lite(firstTrack)] : [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+      );
+      return ref.id;
+    },
+    [user, playlists.length],
+  );
+
+     const createPlaylistWithTracks = useCallback(
+    async (name, tracks) => {
+      const clean = (name || "").trim().slice(0, 40) || "Imported playlist";
+      if (playlists.length >= MAX_PLAYLISTS) {
+        throw new Error(`You can have up to ${MAX_PLAYLISTS} playlists.`);
+      }
+      const ref = await addDoc(
+        collection(db, "users", user.uid, "playlists"),
+        {
+          name: clean,
+          tracks: (tracks || []).slice(0, MAX_TRACKS).map(lite),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
@@ -127,5 +150,6 @@ export default function usePlaylists() {
     removeTrack,
     deletePlaylist,
     setColor,
+    createPlaylistWithTracks
   };
 }
