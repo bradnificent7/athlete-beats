@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { usePlayer } from "../context/PlayerContext";
 import useProfile from "../hooks/useProfile";
 import HoldButton from "./HoldButton";
+import UserSearch from "./UserSearch";
+import VerifyBanner from "./VerifyBanner";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
@@ -65,12 +67,9 @@ const AppLayout = ({ children }) => {
           </div>
         </div>
 
-        <div className="navbar-center">
-          <div className="search-bar">
-            <span className="search-icon">🔍</span>
-            <input type="text" placeholder="Search athletes, songs, teams..." />
-          </div>
-        </div>
+           <div className="navbar-center">
+              <UserSearch />
+            </div>
 
         <div className="navbar-right">
           <button className="nav-icon-btn">🔔</button>
@@ -142,10 +141,13 @@ const AppLayout = ({ children }) => {
           )}
         </aside>
 
-        {/* Main content */}
-        <main className="main-content">{children}</main>
-      </div>
+                <main className="main-content">
+                  <VerifyBanner />
+                  {children}
+                </main>
+              </div>
 
+  
       {/* Bottom music player bar */}
       <div className="player-bar">
         <div className="player-left">

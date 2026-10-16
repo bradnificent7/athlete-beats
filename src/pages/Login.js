@@ -13,6 +13,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Login.css";
 import { Link } from "react-router-dom";
+import { sendVerify } from "../services/verifyEmail";
 
 const passwordRules = [
   { label: "At least 8 characters", test: (p) => p.length >= 8 },
@@ -129,6 +130,7 @@ const Login = () => {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(result.user, { displayName: username.toLowerCase() });
         await saveUserRole(result.user, username);
+        try { await sendVerify(result.user); } catch (e) { /* banner has a resend button */ }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }

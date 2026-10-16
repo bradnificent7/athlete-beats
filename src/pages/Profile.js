@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import "./Profile.css";
@@ -21,6 +21,10 @@ const THEMES = [
   { id: "forest", label: "🌲 Forest" },
 ];
 
+const HANDLE_RE = /^[a-z0-9_.]{3,20}$/;
+const cleanHandle = (s) =>
+  (s || "").toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 20);
+
 const Profile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState({});
@@ -30,7 +34,9 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [handle, setHandle] = useState("");
   const [firstName, setFirstName] = useState("");
+  const [middle, setMiddle] = useState("");
   const [lastName, setLastName] = useState("");
   const [theme, setTheme] = useState("default");
   const [links, setLinks] = useState([]);
@@ -46,7 +52,15 @@ const Profile = () => {
         const data = snap.exists() ? snap.data() : {};
         setProfile(data);
         setBio(data.bio || "");
+        setHandle(
+          cleanHandle(
+            data.username ||
+              user.displayName ||
+              (user.email ? user.email.split("@")[0] : ""),
+          ),
+        );
         setFirstName(data.firstName || "");
+        setMiddle(data.middleInitial || "");
         setLastName(data.lastName || "");
         setTheme(
           THEMES.some((t) => t.id === data.theme) ? data.theme : "default",
@@ -63,7 +77,7 @@ const Profile = () => {
     return () => {
       cancelled = true;
     };
-  }, [user.uid]);
+  }, [user.uid, user.displayName, user.email]);
 
   const toggleRole = (id) => {
     setRoles((current) => {
@@ -74,6 +88,7 @@ const Profile = () => {
     });
     setMsg("");
   };
+
   const addLink = () => {
     const url = newLink.trim();
     if (!toEmbed(url)) {
@@ -108,69 +123,83 @@ const Profile = () => {
     });
     setMsg("");
   };
+
   const handleSave = async () => {
     setSaving(true);
     setMsg("");
     setError("");
     try {
-      const handle = (
-        profile.username ||
-        user.displayName ||
-        "user" + Math.random().toString(36).slice(2, 8)
-      )
-        .toLowerCase()
-        .replace(/[^a-z0-9_.]/g, "");
+      const newHandle = cleanHandle(handle);
+      if (!HANDLE_RE.test(newHandle)) {
+        throw new Error("BAD_HANDLE");
+      }
+      const first = firstName.trim();
+      const last = lastName.trim();
+      const mid = middle.trim().toUpperCase().slice(0, 1);
+      if (!first || !last) throw new Error("NEED_NAME");
 
-      const base = profile.createdAt
-        ? {}
-        : {
-            username: handle,
-            displayName: user.displayName || handle,
-            createdAt: new Date(),
-            followers: 0,
-            following: 0,
-          };
-
-      const fullName = [firstName.trim(), lastName.trim()]
+      const fullName = [first, mid ? mid + "." : "", last]
         .filter(Boolean)
         .join(" ");
 
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          ...base,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          theme,
-          musicBoxes: links,
-          displayName: fullName || profile.username || handle,
-          bio: bio.trim(),
-          roles,
-          role: roles[0],
-        },
-        { merge: true },
-      );
-      setProfile((p) => ({
-        ...p,
-        ...base,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+      const data = {
+        username: newHandle,
+        usernameLower: newHandle,
+        firstName: first,
+        middleInitial: mid,
+        lastName: last,
+        firstLower: first.toLowerCase(),
+        lastLower: last.toLowerCase(),
+        displayName: fullName,
         theme,
         musicBoxes: links,
-        displayName: fullName || profile.username || handle,
-      }));
-
-      if (base.username) {
-        try {
-          await setDoc(doc(db, "usernames", handle), { uid: user.uid });
-        } catch (e) {
-          // handle already claimed, fine
-        }
+        bio: bio.trim(),
+        roles,
+        role: roles[0],
+      };
+      if (!profile.createdAt) {
+        data.createdAt = new Date();
+        data.followers = 0;
+        data.following = 0;
       }
+
+      const oldHandle = profile.username ? profile.username.toLowerCase() : "";
+      const userRef = doc(db, "users", user.uid);
+      const newRef = doc(db, "usernames", newHandle);
+      const oldRef =
+        oldHandle && oldHandle !== newHandle
+          ? doc(db, "usernames", oldHandle)
+          : null;
+
+      // Claim the handle and save the profile together, or neither.
+      await runTransaction(db, async (tx) => {
+        const claim = await tx.get(newRef);
+        const oldClaim = oldRef ? await tx.get(oldRef) : null;
+
+        if (claim.exists() && claim.data().uid !== user.uid) {
+          throw new Error("TAKEN");
+        }
+        if (!claim.exists()) tx.set(newRef, { uid: user.uid });
+        if (oldClaim && oldClaim.exists() && oldClaim.data().uid === user.uid) {
+          tx.delete(oldRef);
+        }
+        tx.set(userRef, data, { merge: true });
+      });
+
+      setProfile((p) => ({ ...p, ...data }));
+      setHandle(newHandle);
       setMsg("Saved ✓");
     } catch (e) {
-      console.error("Save failed:", e);
-      setError("Couldn't save. Try again.");
+      if (e.message === "TAKEN") {
+        setError("That username is already taken. Try another one.");
+      } else if (e.message === "BAD_HANDLE") {
+        setError("Your username needs 3–20 letters, numbers, _ or .");
+      } else if (e.message === "NEED_NAME") {
+        setError("Please add your first and last name.");
+      } else {
+        console.error("Save failed:", e);
+        setError("Couldn't save. Try again.");
+      }
     }
     setSaving(false);
   };
@@ -190,34 +219,58 @@ const Profile = () => {
 
   return (
     <div className={`profile theme-${theme}`}>
-      <div className="profile-header">
-        <div className="profile-avatar">{name[0].toUpperCase()}</div>
-        <div className="profile-head-info">
-          <h2 className="profile-name">{name}</h2>
-          {profile.username && (
-            <p className="profile-handle">@{profile.username}</p>
-          )}
-          <div className="profile-badges">
-            {ROLES.filter((r) => roles.includes(r.id)).map((r) => (
-              <span key={r.id} className="profile-badge">
-                {r.label}
-              </span>
-            ))}
+      <div className="profile-top">
+        <div className="profile-left">
+          <ProfilePlaylists uid={user.uid} />
+        </div>
+
+        <div className="profile-header">
+          <div className="profile-avatar">{name[0].toUpperCase()}</div>
+          <div className="profile-head-info">
+            <h2 className="profile-name">{name}</h2>
+            {profile.username && (
+              <p className="profile-handle">@{profile.username}</p>
+            )}
+            <div className="profile-badges">
+              {ROLES.filter((r) => roles.includes(r.id)).map((r) => (
+                <span key={r.id} className="profile-badge">
+                  {r.label}
+                </span>
+              ))}
+            </div>
+            <p className="profile-stats">
+              <strong>{profile.followers || 0}</strong> followers ·{" "}
+              <strong>{profile.following || 0}</strong> following
+              {joined && <> · Joined {joined}</>}
+            </p>
           </div>
-          <p className="profile-stats">
-            <strong>{profile.followers || 0}</strong> followers ·{" "}
-            <strong>{profile.following || 0}</strong> following
-            {joined && <> · Joined {joined}</>}
-          </p>
         </div>
       </div>
 
       <div className="profile-grid">
         <section className="profile-card">
           <h3>About me</h3>
+
+          <div className="profile-handle-input">
+            <span>@</span>
+            <input
+              placeholder="username"
+              maxLength={20}
+              value={handle}
+              onChange={(e) => {
+                setHandle(cleanHandle(e.target.value));
+                setMsg("");
+              }}
+            />
+          </div>
+          <p className="profile-soon" style={{ marginBottom: 12 }}>
+            This is how people find you. Letters, numbers, _ and . only. It
+            has to be unique.
+          </p>
+
           <div className="profile-names">
             <input
-              placeholder="First name (optional)"
+              placeholder="First name"
               maxLength={30}
               value={firstName}
               onChange={(e) => {
@@ -226,7 +279,17 @@ const Profile = () => {
               }}
             />
             <input
-              placeholder="Last name (optional)"
+              className="mi"
+              placeholder="M.I."
+              maxLength={1}
+              value={middle}
+              onChange={(e) => {
+                setMiddle(e.target.value.replace(/[^a-zA-Z]/g, ""));
+                setMsg("");
+              }}
+            />
+            <input
+              placeholder="Last name"
               maxLength={30}
               value={lastName}
               onChange={(e) => {
@@ -235,6 +298,7 @@ const Profile = () => {
               }}
             />
           </div>
+
           <textarea
             value={bio}
             maxLength={300}
@@ -349,7 +413,6 @@ const Profile = () => {
             ))}
           </div>
           <p className="profile-soon">
-            <ProfilePlaylists uid={user.uid} />
             Friends will go here once following is built.
           </p>
         </section>

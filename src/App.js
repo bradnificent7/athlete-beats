@@ -8,7 +8,7 @@ import Music from "./pages/Music";
 import AppLayout from "./components/AppLayout";
 import Profile from "./pages/Profile";
 import Legal from "./pages/Legal";
-
+import PublicProfile from "./pages/PublicProfile";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -27,6 +27,7 @@ function AppRoutes() {
             <PlayerProvider>
               <AppLayout>
                 <Routes>
+                  <Route path="/u/:handle" element={<PublicProfile />} />
                   <Route path="/" element={<Home />} />
                   <Route path="/music" element={<Music />} />
                   <Route path="/profile" element={<Profile />} />

@@ -316,3 +316,43 @@
   .profile-top { grid-template-columns: 1fr; }
   .profile-left { order: 2; }
 }
+
+.profile-names .mi {
+  flex: 0 0 64px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.profile-handle-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+.profile-handle-input span {
+  color: var(--accent);
+  font-weight: 700;
+}
+.profile-handle-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  outline: none;
+}
+.profile-handle-input:focus-within {
+  border-color: var(--accent);
+}
+
+.profile-bio {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
