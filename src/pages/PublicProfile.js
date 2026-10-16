@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { toEmbed } from "../services/embed";
 import ProfilePlaylists from "../components/ProfilePlaylists";
 import "./Profile.css";
+import ReportButton from "../components/ReportButton";
 
 const ROLE_LABELS = {
   fan: "🏆 Fan",
@@ -94,6 +95,7 @@ export default function PublicProfile() {
               <strong>{p.following || 0}</strong> following
               {joined && <> · Joined {joined}</>}
             </p>
+              <ReportButton targetUid={uid} targetUsername={p.username} />
           </div>
         </div>
       </div>

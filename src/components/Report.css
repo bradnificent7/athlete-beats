@@ -1,0 +1,179 @@
+.report-btn {
+  margin-top: 8px;
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.report-btn:hover {
+  border-color: #f64f59;
+  color: #f64f59;
+}
+
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.report-modal {
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(24, 18, 36, 0.98);
+  border: 1px solid rgba(196, 113, 237, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+.report-modal h3 {
+  margin: 0 0 12px;
+}
+
+.report-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.report-reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.report-modal textarea,
+.report-link {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+.report-modal textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.report-count {
+  text-align: right;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 2px 0 8px;
+}
+
+.report-note {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+}
+.report-ok {
+  color: #00c853;
+}
+.report-err {
+  color: #ff4081;
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.report-send,
+.report-cancel {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.report-send {
+  border: none;
+  background: linear-gradient(135deg, #7b2ff7, #e040fb, #f64f59);
+  font-weight: 600;
+}
+.report-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- admin page ---- */
+.admin-reports h2 {
+  margin-bottom: 12px;
+}
+.admin-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.admin-filter button {
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  text-transform: capitalize;
+}
+.admin-filter button.active {
+  background: rgba(196, 113, 237, 0.2);
+  border-color: #c471ed;
+  color: #fff;
+}
+.admin-report {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.admin-report.status-open {
+  border-color: rgba(246, 79, 89, 0.5);
+}
+.admin-report p {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+.admin-report-top {
+  display: flex;
+  justify-content: space-between;
+}
+.admin-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.admin-details {
+  white-space: pre-wrap;
+  color: rgba(255, 255, 255, 0.85);
+}
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.admin-actions button {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}

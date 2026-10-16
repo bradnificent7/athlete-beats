@@ -9,6 +9,7 @@ import AppLayout from "./components/AppLayout";
 import Profile from "./pages/Profile";
 import Legal from "./pages/Legal";
 import PublicProfile from "./pages/PublicProfile";
+import AdminReports from "./pages/AdminReports";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
