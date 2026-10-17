@@ -333,7 +333,7 @@ const cycleRepeat = () =>
             else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
             else if (e.data === YT.PlayerState.ENDED) {
               setPlaying(false);
-              nendedRef.current();
+              endedRef.current();
             }
           },
           onError: () => {
