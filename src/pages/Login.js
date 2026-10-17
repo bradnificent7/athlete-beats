@@ -15,6 +15,7 @@ import "./Login.css";
 import { Link } from "react-router-dom";
 import { sendVerify } from "../services/verifyEmail";
 
+
 const passwordRules = [
   { label: "At least 8 characters", test: (p) => p.length >= 8 },
   { label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
@@ -456,11 +457,7 @@ const Login = () => {
           </>
         )}
 
-        <p className="login-footer">
-          By signing up you agree to our{" "}
-          <span className="link">Terms of Service</span> and{" "}
-          <span className="link">Privacy Policy</span>
-        </p>
+        
       </div>
     </div>
   );

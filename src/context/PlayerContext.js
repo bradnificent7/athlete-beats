@@ -78,6 +78,9 @@ export const PlayerProvider = ({ children }) => {
   const engineRef = useRef("youtube");
   const scFrameRef = useRef(null);
   const scRef = useRef(null);
+  const repeatRef = useRef("off");
+  const endedRef = useRef(() => {});
+  const skipRef = useRef(() => {});
 
   /* ── state ── */
   const [current, setCurrent] = useState(null);
@@ -93,6 +96,7 @@ export const PlayerProvider = ({ children }) => {
   const [size, setSize] = useState(() => loadPref("ab_mini_size", "m"));
   const [docked, setDocked] = useState(false);
   const [dockVec, setDockVec] = useState({ dx: 0, dy: 0 });
+  const [repeat, setRepeat] = useState("off"); 
 
   /* ── playback ── */
   const loadTrack = useCallback((track) => {
@@ -131,8 +135,30 @@ export const PlayerProvider = ({ children }) => {
     [loadTrack],
   );
 
-  const next = useCallback(() => playAt(indexRef.current + 1), [playAt]);
-  nextRef.current = next;
+  // Next song. With repeat on, the last song wraps back to the first.
+const next = useCallback(() => {
+  const q = queueRef.current;
+  if (q.length && indexRef.current + 1 >= q.length && repeatRef.current !== "off") {
+    playAt(0);
+    return;
+  }
+  playAt(indexRef.current + 1);
+}, [playAt]);
+nextRef.current = next;
+
+// A song finished on its own: repeat-one replays it, otherwise go to the next.
+const onEnded = useCallback(() => {
+  if (repeatRef.current === "one" && indexRef.current >= 0) {
+    playAt(indexRef.current);
+    return;
+  }
+  next();
+}, [next, playAt]);
+endedRef.current = onEnded;
+
+// A song failed to load: skip it without looping forever.
+const skip = useCallback(() => playAt(indexRef.current + 1), [playAt]);
+skipRef.current = skip;
 
   // Previous song, or restart the song if you're on the first one.
   const prevTrack = useCallback(() => {
@@ -211,6 +237,12 @@ export const PlayerProvider = ({ children }) => {
 
   const cycleSize = () =>
     setSize((s) => (s === "s" ? "m" : s === "m" ? "l" : "s"));
+
+  const cycleRepeat = () => {
+    const m = repeat === "off" ? "all" : repeat === "all" ? "one" : "off";
+    repeatRef.current = m;
+    setRepeat(m);
+  };
 
   // Tuck the player into the bottom-left icon, or pop it back out.
   const toggleDock = () => {
@@ -300,11 +332,11 @@ export const PlayerProvider = ({ children }) => {
             else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
             else if (e.data === YT.PlayerState.ENDED) {
               setPlaying(false);
-              nextRef.current();
+              nendedRef.current();
             }
           },
           onError: () => {
-            if (engineRef.current === "youtube") nextRef.current();
+            if (engineRef.current === "youtube") skipRef.current();
           },
         },
       });
@@ -337,11 +369,11 @@ export const PlayerProvider = ({ children }) => {
         w.bind(SC.Widget.Events.FINISH, () => {
           if (engineRef.current === "soundcloud") {
             setPlaying(false);
-            nextRef.current();
+            endedRef.current();
           }
         });
         w.bind(SC.Widget.Events.ERROR, () => {
-          if (engineRef.current === "soundcloud") nextRef.current();
+          if (engineRef.current === "soundcloud") skipRef.current();
         });
       })
       .catch(() => {});
@@ -391,6 +423,8 @@ export const PlayerProvider = ({ children }) => {
     toggleCollapse,
     toggleDock,
     close,
+    repeat,
+    cycleRepeat,
   };
 
   /* ── render ── */
@@ -425,6 +459,18 @@ export const PlayerProvider = ({ children }) => {
                 : `Tap ▶ to play · ${current.title}`
               : ""}
           </span>
+
+          <button
+            className="yt-toggle"
+            onClick={cycleRepeat}
+            title={
+              repeat === "off" ? "Repeat: off" : repeat === "all" ? "Repeat: all" : "Repeat: one song"
+            }
+            style={{ opacity: repeat === "off" ? 0.45 : 1 }}
+          >
+            {repeat === "one" ? "🔂" : "🔁"}
+          </button>
+
           {desk && (
             <button
               className="yt-toggle"
