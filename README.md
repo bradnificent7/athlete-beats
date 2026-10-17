@@ -191,3 +191,5 @@ See [ROADMAP.md](./docs/ROADMAP.md) for full details.
 AthleteBeats is a proprietary project. The source code, design, branding, and concept are the intellectual property of Bradley Nguyen. No part of this project may be copied, distributed, or used without explicit written permission.
 
 See [Terms of Service](./docs/TERMS_OF_SERVICE.md) for full legal terms.
+
+   Verification: AB-QZLPH3
