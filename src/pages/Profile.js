@@ -7,6 +7,7 @@ import { toEmbed } from "../services/embed";
 import ProfilePlaylists from "../components/ProfilePlaylists";
 import VerifiedBadge from "../components/VerifiedBadge";
 import VerifyRequest from "../components/VerifyRequest";
+import FollowBar from "../components/FollowBar";
 
 const ROLES = [
   { id: "fan", label: "🏆 Fan" },
@@ -240,11 +241,8 @@ const Profile = () => {
                 </span>
               ))}
             </div>
-            <p className="profile-stats">
-              <strong>{profile.followers || 0}</strong> followers ·{" "}
-              <strong>{profile.following || 0}</strong> following
-              {joined && <> · Joined {joined}</>}
-            </p>
+               <FollowBar targetUid={user.uid} self />
+                {joined && <p className="profile-stats">Joined {joined}</p>}
           </div>
         </div>
       </div>

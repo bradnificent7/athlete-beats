@@ -7,6 +7,8 @@ import { toEmbed } from "../services/embed";
 import ProfilePlaylists from "../components/ProfilePlaylists";
 import "./Profile.css";
 import ReportButton from "../components/ReportButton";
+import FollowBar from "../components/FollowBar";
+
 
 const ROLE_LABELS = {
   fan: "🏆 Fan",
@@ -96,6 +98,7 @@ export default function PublicProfile() {
               {joined && <> · Joined {joined}</>}
             </p>
               <ReportButton targetUid={uid} targetUsername={p.username} />
+              <FollowBar targetUid={uid} />
           </div>
         </div>
       </div>
