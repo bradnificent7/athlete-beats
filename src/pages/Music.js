@@ -217,7 +217,7 @@ const PlaylistsTab = ({
   deletePlaylist,
   setColor,
 }) => {
-  const { playTrack, current } = usePlayer();
+  const { playTrack, current, repeat, setRepeatMode } = usePlayer();
   const [name, setName] = useState("");
   const [open, setOpen] = useState(null);
   const [msg, setMsg] = useState("");
@@ -309,7 +309,18 @@ const PlaylistsTab = ({
                   >
                     🔀 Shuffle
                   </button>
-                  <button onClick={() => handleDelete(p)}>Delete</button>
+
+                  <button
+                    disabled={!p.tracks.length}
+                    style={{ opacity: repeat === "all" ? 1 : 0.8 }}
+                    onClick={() => {
+                      setRepeatMode("all");
+                      playTrack(p.tracks[0], p.tracks);
+                    }}
+                  >
+                    🔁 Repeat
+                  </button>
+                                    <button onClick={() => handleDelete(p)}>Delete</button>
                 </div>
               </div>
 

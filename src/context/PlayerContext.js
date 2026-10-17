@@ -238,11 +238,12 @@ skipRef.current = skip;
   const cycleSize = () =>
     setSize((s) => (s === "s" ? "m" : s === "m" ? "l" : "s"));
 
-  const cycleRepeat = () => {
-    const m = repeat === "off" ? "all" : repeat === "all" ? "one" : "off";
-    repeatRef.current = m;
-    setRepeat(m);
-  };
+  const setRepeatMode = (m) => {
+  repeatRef.current = m;
+  setRepeat(m);
+};
+const cycleRepeat = () =>
+  setRepeatMode(repeat === "off" ? "all" : repeat === "all" ? "one" : "off");
 
   // Tuck the player into the bottom-left icon, or pop it back out.
   const toggleDock = () => {
@@ -425,6 +426,7 @@ skipRef.current = skip;
     close,
     repeat,
     cycleRepeat,
+    setRepeatMode,
   };
 
   /* ── render ── */

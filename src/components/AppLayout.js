@@ -13,7 +13,7 @@ import VerifyBanner from "./VerifyBanner";
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
-  const { current, playing, toggle, next, prevTrack, seekBy, docked, toggleDock } = usePlayer();
+  const { current, playing, toggle, next, prevTrack, seekBy, docked, toggleDock, repeat, cycleRepeat } = usePlayer();  
   const profile = useProfile();
 
   const displayName =
@@ -208,12 +208,27 @@ const AppLayout = ({ children }) => {
             ⏩
           </HoldButton>
 
-          <button
+                    <button
             className="player-btn seek-btn"
             onClick={next}
             title="Next song"
           >
             ⏭
+          </button>
+
+          <button
+            className="player-btn seek-btn"
+            onClick={cycleRepeat}
+            title={
+              repeat === "off"
+                ? "Repeat: off"
+                : repeat === "all"
+                ? "Repeat: all"
+                : "Repeat: one song"
+            }
+            style={{ opacity: repeat === "off" ? 0.45 : 1 }}
+          >
+            {repeat === "one" ? "🔂" : "🔁"}
           </button>
         </div>
 
