@@ -1,0 +1,14 @@
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1da1f2, #00e5ff);
+  color: #fff;
+  font-size: 0.6em;
+  font-weight: 700;
+  vertical-align: middle;
+}

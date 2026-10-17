@@ -177,3 +177,37 @@
   cursor: pointer;
   font-size: 0.8rem;
 }
+
+.verify-steps {
+  padding-left: 18px;
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+}
+.verify-code {
+  display: inline-block;
+  margin: 6px 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(196, 113, 237, 0.15);
+  border: 1px dashed #c471ed;
+  font-family: monospace;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  user-select: all;
+}
+.verify-note {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 70px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}

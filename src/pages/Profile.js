@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import "./Profile.css";
 import { toEmbed } from "../services/embed";
 import ProfilePlaylists from "../components/ProfilePlaylists";
+import VerifiedBadge from "../components/VerifiedBadge";
+import VerifyRequest from "../components/VerifyRequest";
 
 const ROLES = [
   { id: "fan", label: "🏆 Fan" },
@@ -227,7 +229,7 @@ const Profile = () => {
         <div className="profile-header">
           <div className="profile-avatar">{name[0].toUpperCase()}</div>
           <div className="profile-head-info">
-            <h2 className="profile-name">{name}</h2>
+            <h2 className="profile-name">{name} <VerifiedBadge user={profile} /></h2>
             {profile.username && (
               <p className="profile-handle">@{profile.username}</p>
             )}
@@ -332,9 +334,12 @@ const Profile = () => {
           </button>
           {msg && <p className="profile-ok">{msg}</p>}
           {error && <p className="profile-err">{error}</p>}
-        </section>
+                </section>
+
+        <VerifyRequest roles={profile.roles || []} username={profile.username} />
 
         <section className="profile-card">
+          <h3>🎨 Theme</h3>
           <h3>🎨 Theme</h3>
           <div className="profile-roles">
             {THEMES.map((t) => (

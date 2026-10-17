@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Legal from "./pages/Legal";
 import PublicProfile from "./pages/PublicProfile";
 import AdminReports from "./pages/AdminReports";
+import AdminVerify from "./pages/AdminVerify";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -32,6 +33,8 @@ function AppRoutes() {
                   <Route path="/" element={<Home />} />
                   <Route path="/music" element={<Music />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/verify" element={<AdminVerify />} />
                   <Route path="*" element={<Home />} />
     
                 </Routes>

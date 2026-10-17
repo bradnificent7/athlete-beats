@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import "./UserSearch.css";
+import VerifiedBadge from "./VerifiedBadge";
 
 const PAGE = 10;
 const MAX = 50;
@@ -163,7 +164,7 @@ export default function UserSearch() {
               </div>
               <div>
                 <div className="sr-name">
-                  {u.displayName || u.username} {ROLE_ICON[u.role] || ""}
+                  {u.displayName || u.username} {ROLE_ICON[u.role] || ""} <VerifiedBadge user={u} />
                 </div>
                 <div className="sr-sub">@{u.username}</div>
               </div>
