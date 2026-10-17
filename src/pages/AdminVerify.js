@@ -15,6 +15,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import "../components/Report.css";
 
+
 const fetchRequests = async () => {
   const snap = await getDocs(
     query(
@@ -66,6 +67,7 @@ export default function AdminVerify() {
       batch.update(doc(db, "users", r.uid), {
         verified: true,
         verifiedRole: r.role,
+        verifiedAt: serverTimestamp(),
       });
       await batch.commit();
       setItems((xs) =>
@@ -95,6 +97,7 @@ export default function AdminVerify() {
         batch.update(doc(db, "users", r.uid), {
           verified: false,
           verifiedRole: "",
+          verifiedAt: null,
         });
       }
       await batch.commit();
@@ -158,6 +161,13 @@ export default function AdminVerify() {
               </a>
             </p>
           )}
+
+          {r.reviewedAt && r.reviewedAt.toDate && (
+            <p className="admin-details">
+              Reviewed {r.reviewedAt.toDate().toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
+            </p>
+          )}
+          
           {r.note && <p className="admin-details">{r.note}</p>}
           <div className="admin-actions">
             {r.status !== "approved" && (
