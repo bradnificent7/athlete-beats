@@ -22,6 +22,15 @@ const gameStatus = (g) => {
   });
 };
 
+const groupByDate = (games) => {
+  const grouped = {};
+  games.forEach((g) => {
+    const d = toDateString(new Date(g.datetime));
+    (grouped[d] = grouped[d] || []).push(g);
+  });
+  return grouped;
+};
+
 const TeamSide = ({ team, showScore }) => (
   <div className="team-side">
     {team.logo && (
@@ -46,6 +55,7 @@ const Home = () => {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updated, setUpdated] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,15 +95,41 @@ const Home = () => {
     };
   }, [sport]);
 
+  // Quietly refresh scores while any of today's games isn't final
+useEffect(() => {
+  const today = toDateString(new Date());
+  const todays = byDate[today] || [];
+  if (!todays.some((g) => g.state !== "post")) return;
+
+  let cancelled = false;
+  const refresh = async () => {
+    if (document.hidden) return;
+    try {
+      const games = await getScores(sport);
+      if (cancelled) return;
+      setByDate(groupByDate(games));
+      setUpdated(new Date());
+    } catch (e) {
+      // keep showing the last scores if a refresh fails
+    }
+  };
+
+  const id = setInterval(refresh, 45000);
+  document.addEventListener("visibilitychange", refresh);
+  return () => {
+    cancelled = true;
+    clearInterval(id);
+    document.removeEventListener("visibilitychange", refresh);
+  };
+}, [sport, byDate]);
+
   const current = SPORTS.find((s) => s.key === sport);
   const dates = Object.keys(byDate).sort();
   const games = selected ? byDate[selected] || [] : [];
 
   return (
     <div className="home">
-      <h2 className="games-title">
-        {current.emoji} {current.label} Games
-      </h2>
+      <h2 className="games-title">🏟️ Today's Games</h2>
 
       <div className="sport-tabs">
         {SPORTS.map((s) => (
@@ -106,6 +142,12 @@ const Home = () => {
           </button>
         ))}
       </div>
+
+      {updated && (
+        <p className="home-msg" style={{ fontSize: 12, opacity: 0.7 }}>
+          Updated {updated.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+        </p>
+      )}
 
       {loading && <p className="home-msg">Loading games...</p>}
       {error && <p className="home-msg error">{error}</p>}
