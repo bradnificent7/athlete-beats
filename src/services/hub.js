@@ -32,15 +32,30 @@ export async function getSportsCards(league) {
   }));
 }
 
+// Your Cloudflare Worker address (no slash at the end)
+const MUSIC_PROXY = "https://athletebeats-music.bradnifisent.workers.dev";
 // Paste your Cloudflare Worker address here once you've made it (Part B),
 // like "https://athletebeats-music.yourname.workers.dev" (no slash at the end).
-const MUSIC_PROXY = "https://athletebeats-music.bradnifisent.workers.dev";
-const MUSIC_FEEDS = [
-  { key: "billboard", name: "Billboard" },
-  { key: "rollingstone", name: "Rolling Stone" },
-  { key: "stereogum", name: "Stereogum" },
-  { key: "pitchfork", name: "Pitchfork" },
+export const MUSIC_GENRES = [
+  { id: "all", label: "All", emoji: "🎧", feeds: ["billboard", "rollingstone", "stereogum", "pitchfork"] },
+  { id: "hiphop", label: "Hip-Hop", emoji: "🎤", feeds: ["xxl", "thesource", "rapup"] },
+  { id: "rnb", label: "R&B", emoji: "💜", feeds: ["ratedrnb", "okayplayer"] },
+  { id: "pop", label: "Pop", emoji: "🌟", feeds: ["idolator", "billboardpop"] },
+  { id: "rock", label: "Rock", emoji: "🎸", feeds: ["loudwire", "consequence", "nme"] },
+  { id: "country", label: "Country", emoji: "🤠", feeds: ["tasteofcountry", "savingcountry", "soundslikenashville"] },
+  { id: "electronic", label: "Electronic", emoji: "🎛️", feeds: ["mixmag", "edmcom", "dancingastronaut"] },
+  { id: "latin", label: "Latin", emoji: "💃", feeds: ["remezcla", "billboardlatin"] },
 ];
+
+const FEED_NAMES = {
+  billboard: "Billboard", rollingstone: "Rolling Stone", stereogum: "Stereogum",
+  pitchfork: "Pitchfork", xxl: "XXL", thesource: "The Source", rapup: "Rap-Up",
+  ratedrnb: "Rated R&B", okayplayer: "Okayplayer", idolator: "Idolator",
+  billboardpop: "Billboard", loudwire: "Loudwire", consequence: "Consequence",
+  nme: "NME", tasteofcountry: "Taste of Country", savingcountry: "Saving Country Music",
+  soundslikenashville: "Sounds Like Nashville", mixmag: "Mixmag", edmcom: "EDM.com",
+  dancingastronaut: "Dancing Astronaut", remezcla: "Remezcla", billboardlatin: "Billboard Latin",
+};
 
 const parseFeed = (xml, name) => {
   const doc = new DOMParser().parseFromString(xml, "text/xml");
@@ -67,28 +82,66 @@ const parseFeed = (xml, name) => {
     });
 };
 
-export async function getMusicNews() {
+export async function getMusicNews(genreId = "all") {
   if (!MUSIC_PROXY) throw new Error("NOT_CONFIGURED");
+  const genre = MUSIC_GENRES.find((g) => g.id === genreId) || MUSIC_GENRES[0];
   const results = await Promise.allSettled(
-    MUSIC_FEEDS.map(async (f) => {
-      const res = await fetch(`${MUSIC_PROXY}/?feed=${f.key}`);
-      if (!res.ok) throw new Error(`${f.name} ${res.status}`);
-      return parseFeed(await res.text(), f.name);
+    genre.feeds.map(async (key) => {
+      const res = await fetch(`${MUSIC_PROXY}/?feed=${key}`);
+      if (!res.ok) throw new Error(`${key} ${res.status}`);
+      return parseFeed(await res.text(), FEED_NAMES[key] || key);
     }),
   );
   const all = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
-  if (all.length === 0) throw new Error("Couldn't load music news right now.");
+  if (all.length === 0) throw new Error("Couldn't load this category right now.");
   return all
     .filter((a) => a.title && a.link)
     .sort((a, b) => b.time - a.time)
     .slice(0, 30);
 }
 
-// Apple's most-played songs chart (no key needed)
-export async function getTopSongs() {
+const APPLE_GENRE = {
+  hiphop: 18,
+  rnb: 15,
+  pop: 14,
+  rock: 21,
+  country: 6,
+  electronic: 7,
+  latin: 12,
+};
+
+const parseLegacyChart = (data) =>
+  ((data.feed && data.feed.entry) || []).map((s) => {
+    const link = Array.isArray(s.link) ? s.link[0] : s.link;
+    const imgs = s["im:image"] || [];
+    return {
+      id: s.id && s.id.label,
+      title: s["im:name"] && s["im:name"].label,
+      artist: s["im:artist"] && s["im:artist"].label,
+      image: safeUrl(imgs[imgs.length - 1] && imgs[imgs.length - 1].label),
+      link: safeUrl(link && link.attributes && link.attributes.href),
+    };
+  });
+
+// Apple's most-played songs (no key needed). Genre charts when available.
+export async function getTopSongs(genreId = "all") {
+  const gid = APPLE_GENRE[genreId];
+  if (gid) {
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/us/rss/topsongs/limit=100/genre=${gid}/json`,
+      );
+      if (!res.ok) throw new Error("genre chart");
+      const list = parseLegacyChart(await res.json());
+      if (list.length) return list;
+    } catch (e) {
+      // fall through to the overall chart below
+    }
+  }
+
   try {
     const res = await fetch(
-      "https://rss.applemarketingtools.com/api/v2/us/music/most-played/10/songs.json",
+      "https://rss.applemarketingtools.com/api/v2/us/music/most-played/100/songs.json",
     );
     if (!res.ok) throw new Error("chart");
     const data = await res.json();
@@ -100,21 +153,9 @@ export async function getTopSongs() {
       link: safeUrl(s.url),
     }));
   } catch (e) {
-    // older Apple address as a backup
-    const res = await fetch("https://itunes.apple.com/us/rss/topsongs/limit=10/json");
+    const res = await fetch("https://itunes.apple.com/us/rss/topsongs/limit=100/json");
     if (!res.ok) throw new Error("Couldn't load the chart right now.");
-    const data = await res.json();
-    return (data.feed.entry || []).map((s) => {
-      const link = Array.isArray(s.link) ? s.link[0] : s.link;
-      const imgs = s["im:image"] || [];
-      return {
-        id: s.id && s.id.label,
-        title: s["im:name"] && s["im:name"].label,
-        artist: s["im:artist"] && s["im:artist"].label,
-        image: safeUrl(imgs[imgs.length - 1] && imgs[imgs.length - 1].label),
-        link: safeUrl(link && link.attributes && link.attributes.href),
-      };
-    });
+    return parseLegacyChart(await res.json());
   }
 }
 

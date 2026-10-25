@@ -55,3 +55,21 @@
 }
 .song-title { font-weight: 700; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .song-artist { opacity: .75; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.genre-pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; }
+.genre-pill {
+  flex: 0 0 auto; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: .9rem;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: inherit;
+}
+.genre-pill.active { background: rgba(196,113,237,.25); border-color: #c471ed; }
+.song-scroll {
+  max-height: 540px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #8e2de2 transparent;
+}
+.song-scroll::-webkit-scrollbar { width: 8px; }
+.song-scroll::-webkit-scrollbar-thumb { background: #8e2de2; border-radius: 8px; }
+
+.page-count { font-size: .9rem; font-weight: 400; opacity: .6; }
