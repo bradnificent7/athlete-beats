@@ -37,14 +37,25 @@ export default function useFollow(targetUid) {
     setBusy(true);
     const mine = doc(db, "users", user.uid, "following", targetUid);
     const theirs = doc(db, "users", targetUid, "followers", user.uid);
+    const note = doc(db, "users", targetUid, "notifications", "follow_" + user.uid);
     const batch = writeBatch(db);
     try {
       if (following) {
         batch.delete(mine);
         batch.delete(theirs);
+        batch.delete(note); // take back the "started following you" note
       } else {
+        // the rules check this name against your real profile
+        const me = await getDoc(doc(db, "users", user.uid));
         batch.set(mine, { createdAt: serverTimestamp() });
         batch.set(theirs, { createdAt: serverTimestamp() });
+        batch.set(note, {
+          type: "follow",
+          fromUid: user.uid,
+          fromUsername: me.data().username,
+          createdAt: serverTimestamp(),
+          read: false,
+        });
       }
       await batch.commit();
       setFollowing(!following);

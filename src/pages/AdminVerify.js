@@ -69,6 +69,12 @@ export default function AdminVerify() {
         verifiedRole: r.role,
         verifiedAt: serverTimestamp(),
       });
+      batch.set(doc(collection(db, "users", r.uid, "notifications")), {
+        type: "verified",
+        role: r.role,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
       await batch.commit();
       setItems((xs) =>
         xs.map((x) => (x.id === r.id ? { ...x, status: "approved" } : x)),

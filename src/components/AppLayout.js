@@ -9,6 +9,7 @@ import useProfile from "../hooks/useProfile";
 import HoldButton from "./HoldButton";
 import UserSearch from "./UserSearch";
 import VerifyBanner from "./VerifyBanner";
+import NotificationBell from "./NotificationBell";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
@@ -72,7 +73,7 @@ const AppLayout = ({ children }) => {
             </div>
 
         <div className="navbar-right">
-          <button className="nav-icon-btn">🔔</button>
+          <NotificationBell />
           <button className="nav-icon-btn">✉️</button>
           <div className="nav-user">
             <div className="nav-avatar">{displayName[0].toUpperCase()}</div>
