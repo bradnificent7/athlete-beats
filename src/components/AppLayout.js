@@ -10,12 +10,14 @@ import HoldButton from "./HoldButton";
 import UserSearch from "./UserSearch";
 import VerifyBanner from "./VerifyBanner";
 import NotificationBell from "./NotificationBell";
+import useConversations from "../hooks/useConversations";
 
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
   const { current, playing, toggle, next, prevTrack, seekBy, docked, toggleDock, repeat, cycleRepeat } = usePlayer();  
   const profile = useProfile();
+  const { unreadCount: unreadMsgs } = useConversations();
 
   const displayName =
     profile?.displayName ||
@@ -74,7 +76,12 @@ const AppLayout = ({ children }) => {
 
         <div className="navbar-right">
           <NotificationBell />
-          <button className="nav-icon-btn">✉️</button>
+            <Link to="/messages" className="nav-icon-btn msg-envelope" title="Messages">
+            ✉️
+            {unreadMsgs > 0 && (
+              <span className="msg-badge">{unreadMsgs > 9 ? "9+" : unreadMsgs}</span>
+            )}
+          </Link>
           <div className="nav-user">
             <div className="nav-avatar">{displayName[0].toUpperCase()}</div>
             <div className="nav-user-info">

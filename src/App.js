@@ -14,6 +14,7 @@ import AdminVerify from "./pages/AdminVerify";
 import Trending from "./pages/Trending";
 import SportHub from "./pages/SportHub";
 import ComingSoon from "./pages/ComingSoon";
+import Messages from "./pages/Messages";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -37,6 +38,8 @@ function AppRoutes() {
                   <Route path="/" element={<Home />} />
                   <Route path="/music" element={<Music />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/messages/:handle" element={<Messages />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/verify" element={<AdminVerify />} />
                   <Route path="/trending" element={<Trending />} />

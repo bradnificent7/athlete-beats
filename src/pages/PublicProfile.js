@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
@@ -99,6 +99,11 @@ export default function PublicProfile() {
             </p>
               <ReportButton targetUid={uid} targetUsername={p.username} />
               <FollowBar targetUid={uid} />
+                            {p.username && (
+                <Link className="msg-btn" to={`/messages/${p.username}`}>
+                  ✉️ Message
+                </Link>
+              )}
           </div>
         </div>
       </div>
