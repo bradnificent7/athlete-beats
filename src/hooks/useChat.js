@@ -87,5 +87,43 @@ export default function useChat(otherUid, convo) {
     [uid, cid, otherUid, sending],
   );
 
-  return { cid, messages, send, sending };
+    const edit = useCallback(
+    async (id, text) => {
+      const clean = (text || "").trim().slice(0, 1000);
+      if (!cid || !clean) return false;
+      try {
+        await updateDoc(doc(db, "conversations", cid, "messages", id), {
+          text: clean,
+          editedAt: serverTimestamp(),
+        });
+        return true;
+      } catch (e) {
+        console.error("edit", e);
+        alert("Couldn't save that edit. You can only edit for 15 minutes after sending.");
+        return false;
+      }
+    },
+    [cid],
+  );
+
+    const edit = useCallback(
+    async (id, text) => {
+      const clean = (text || "").trim().slice(0, 1000);
+      if (!cid || !clean) return false;
+      try {
+        await updateDoc(doc(db, "conversations", cid, "messages", id), {
+          text: clean,
+          editedAt: serverTimestamp(),
+        });
+        return true;
+      } catch (e) {
+        console.error("edit", e);
+        alert("Couldn't save that edit. You can only edit for 15 minutes after sending.");
+        return false;
+      }
+    },
+    [cid],
+  );
+
+  return { cid, messages, send, sending, edit };
 }

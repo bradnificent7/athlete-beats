@@ -7,6 +7,7 @@ import useConversations from "../hooks/useConversations";
 import useChat from "../hooks/useChat";
 import useUser from "../hooks/useUser";
 import "./Messages.css";
+import MessageEdit, { canEdit } from "../components/MessageEdit";
 
 function ConvoRow({ c, active }) {
   const u = useUser(c.other);
@@ -29,7 +30,8 @@ function ConvoRow({ c, active }) {
 
 function ChatPane({ otherUid, name, username, convo }) {
   const { user } = useAuth();
-  const { messages, send, sending } = useChat(otherUid, convo);
+  const { messages, send, sending, edit } = useChat(otherUid, convo);
+  const [editingId, setEditingId] = useState(null);
   const [text, setText] = useState("");
   const listRef = useRef(null);
 
@@ -60,14 +62,34 @@ function ChatPane({ otherUid, name, username, convo }) {
         {messages.length === 0 && (
           <p className="msg-empty">No messages yet. Say hi 👋</p>
         )}
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`msg-bubble ${m.from === user.uid ? "mine" : "theirs"}`}
-          >
-            {m.text}
-          </div>
-        ))}
+                {messages.map((m) =>
+          editingId === m.id ? (
+            <MessageEdit
+              key={m.id}
+              initial={m.text}
+              max={1000}
+              onSave={(t) => edit(m.id, t)}
+              onCancel={() => setEditingId(null)}
+            />
+          ) : (
+            <div
+              key={m.id}
+              className={`msg-bubble ${m.from === user.uid ? "mine" : "theirs"}`}
+            >
+              {m.text}
+              {m.editedAt && <span className="edited-tag"> (edited)</span>}
+              {canEdit(m, user.uid) && (
+                <button
+                  className="edit-btn"
+                  title="Edit (within 15 minutes)"
+                  onClick={() => setEditingId(m.id)}
+                >
+                  ✎
+                </button>
+              )}
+            </div>
+          ),
+        )}
       </div>
 
       {!canSend && (

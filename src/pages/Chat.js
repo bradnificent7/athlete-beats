@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useRoom from "../hooks/useRoom";
+import MessageEdit, { canEdit } from "../components/MessageEdit";
 import "./Chat.css";
 
 const ROOMS = [
@@ -19,8 +20,9 @@ const timeOf = (ts) =>
 export default function Chat() {
   const { user } = useAuth();
   const [roomId, setRoomId] = useState("lobby");
-  const { messages, send, sending, remove } = useRoom(roomId);
+  const { messages, send, sending, edit, remove } = useRoom(roomId);
   const [text, setText] = useState("");
+  const [editingId, setEditingId] = useState(null);
   const listRef = useRef(null);
   const room = ROOMS.find((r) => r.id === roomId);
 
@@ -45,7 +47,10 @@ export default function Chat() {
           <button
             key={r.id}
             className={r.id === roomId ? "active" : ""}
-            onClick={() => setRoomId(r.id)}
+            onClick={() => {
+              setRoomId(r.id);
+              setEditingId(null);
+            }}
           >
             {r.label}
           </button>
@@ -68,6 +73,16 @@ export default function Chat() {
                 @{m.username}
               </Link>
               <span className="chat-time">{timeOf(m.createdAt)}</span>
+              {m.editedAt && <span className="edited-tag">(edited)</span>}
+              {canEdit(m, user.uid) && editingId !== m.id && (
+                <button
+                  className="chat-del"
+                  title="Edit (within 15 minutes)"
+                  onClick={() => setEditingId(m.id)}
+                >
+                  ✎
+                </button>
+              )}
               {m.from === user.uid && (
                 <button
                   className="chat-del"
@@ -78,7 +93,16 @@ export default function Chat() {
                 </button>
               )}
             </div>
-            <div className="chat-text">{m.text}</div>
+            {editingId === m.id ? (
+              <MessageEdit
+                initial={m.text}
+                max={500}
+                onSave={(t) => edit(m.id, t)}
+                onCancel={() => setEditingId(null)}
+              />
+            ) : (
+              <div className="chat-text">{m.text}</div>
+            )}
           </div>
         ))}
       </div>

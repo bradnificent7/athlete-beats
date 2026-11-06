@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
-  collection, addDoc, deleteDoc, doc, query, orderBy, limit,
+  collection, addDoc, deleteDoc, updateDoc, doc, query, orderBy, limit,
   onSnapshot, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -54,6 +54,25 @@ export default function useRoom(roomId) {
     [user, profile, roomId, sending],
   );
 
+  const edit = useCallback(
+    async (id, text) => {
+      const clean = (text || "").trim().slice(0, 500);
+      if (!clean) return false;
+      try {
+        await updateDoc(doc(db, "rooms", roomId, "messages", id), {
+          text: clean,
+          editedAt: serverTimestamp(),
+        });
+        return true;
+      } catch (e) {
+        console.error("room edit", e);
+        alert("Couldn't save that edit. You can only edit for 15 minutes after sending.");
+        return false;
+      }
+    },
+    [roomId],
+  );
+
   const remove = useCallback(
     async (id) => {
       try {
@@ -65,5 +84,5 @@ export default function useRoom(roomId) {
     [roomId],
   );
 
-  return { messages, send, sending, remove };
+  return { messages, send, sending, edit, remove };
 }
