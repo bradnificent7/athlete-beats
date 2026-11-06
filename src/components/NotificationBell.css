@@ -31,3 +31,18 @@
 .bell-item:hover { background: rgba(255,255,255,.05); }
 .bell-item.unread { background: rgba(196,113,237,.12); }
 .bell-time { font-size: .75rem; opacity: .6; }
+
+@media (max-width: 768px) {
+  .bell-wrap { position: static; }
+  .bell-pop {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: 60px;      /* just under the top bar */
+    padding-top: 0;
+  }
+  .bell-menu {
+    width: auto;
+    max-height: 70vh;
+  }
+}
