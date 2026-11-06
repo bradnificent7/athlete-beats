@@ -129,7 +129,7 @@ export default function UserSearch() {
         <input
           type="text"
           autoComplete="off"
-          placeholder="Search people by name or @handle..."
+          placeholder="Search people by name or @username..."
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -150,7 +150,7 @@ export default function UserSearch() {
             <div className="sr-msg">Searching...</div>
           )}
           {!busy && results.length === 0 && (
-            <div className="sr-msg">No one found. Try their @handle.</div>
+            <div className="sr-msg">No one found. Try their @username.</div>
           )}
           {results.map((u) => (
             <button

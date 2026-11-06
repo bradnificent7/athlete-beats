@@ -15,6 +15,7 @@ import Trending from "./pages/Trending";
 import SportHub from "./pages/SportHub";
 import ComingSoon from "./pages/ComingSoon";
 import Messages from "./pages/Messages";
+import Chat from "./pages/Chat";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -46,7 +47,7 @@ function AppRoutes() {
                   <Route path="/nba" element={<SportHub key="nba" sport="nba" />} />
                   <Route path="/nfl" element={<SportHub key="nfl" sport="nfl" />} />
                   <Route path="/live" element={<ComingSoon emoji="📺" title="Live" text="Live streams and watch parties are coming soon." />} />
-                  <Route path="/chat" element={<ComingSoon emoji="💬" title="Chat" text="Direct messages and group chat are coming soon." />} />
+                  <Route path="/chat" element={<Chat />} />
                   <Route path="*" element={<Home />} />
                 </Routes>
               </AppLayout>
