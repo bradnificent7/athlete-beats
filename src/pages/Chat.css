@@ -39,3 +39,26 @@
   .chat-page { height: calc(100vh - 150px); }
   .chat-line { max-width: 100%; }
 }
+
+.edited-tag { font-size: .72rem; opacity: .55; font-style: italic; }
+.edit-btn {
+  background: none; border: none; color: inherit; opacity: .55; cursor: pointer;
+  font-size: .85rem; margin-left: 8px; padding: 0 2px;
+}
+.edit-btn:hover { opacity: 1; }
+.edit-box { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
+.edit-box input {
+  flex: 1; min-width: 0; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.3); color: inherit; font-size: 1rem;
+}
+.edit-box button {
+  padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2);
+  background: none; color: inherit; cursor: pointer;
+}
+.edit-box button[type="submit"] { background: linear-gradient(135deg, #c471ed, #f64f59); border-color: transparent; color: #fff; font-weight: 700; }
+
+.gone-text, .msg-bubble.gone { font-style: italic; opacity: .55; }
+.msg-bubble.gone {
+  background: transparent !important;
+  border: 1px dashed rgba(255,255,255,.25);
+}

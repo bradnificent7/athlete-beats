@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
-  collection, addDoc, deleteDoc, updateDoc, doc, query, orderBy, limit,
+  collection, addDoc, updateDoc, doc, query, orderBy, limit,
   onSnapshot, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -73,10 +73,15 @@ export default function useRoom(roomId) {
     [roomId],
   );
 
+  // "delete" wipes the text and leaves a blank marker, so nothing breaks for anyone
   const remove = useCallback(
     async (id) => {
       try {
-        await deleteDoc(doc(db, "rooms", roomId, "messages", id));
+        await updateDoc(doc(db, "rooms", roomId, "messages", id), {
+          text: "",
+          deleted: true,
+          deletedAt: serverTimestamp(),
+        });
       } catch (e) {
         console.error("room delete", e);
       }

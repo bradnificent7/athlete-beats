@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useRoom from "../hooks/useRoom";
-import MessageEdit, { canEdit } from "../components/MessageEdit";
+import MessageEdit, { canEdit, isExpired } from "../components/MessageEdit";
 import "./Chat.css";
 
 const ROOMS = [
@@ -26,11 +26,14 @@ export default function Chat() {
   const listRef = useRef(null);
   const room = ROOMS.find((r) => r.id === roomId);
 
+  // deleted messages show a marker for 24 hours, then they're hidden
+  const visible = messages.filter((m) => !isExpired(m));
+
   // keep the newest message in view
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length, roomId]);
+  }, [visible.length, roomId]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -60,10 +63,10 @@ export default function Chat() {
       <p className="chat-blurb">{room.blurb}</p>
 
       <div className="chat-thread" ref={listRef}>
-        {messages.length === 0 && (
+        {visible.length === 0 && (
           <p className="chat-empty">Quiet in here. Be the first to say something 👋</p>
         )}
-        {messages.map((m) => (
+        {visible.map((m) => (
           <div
             key={m.id}
             className={`chat-line ${m.from === user.uid ? "mine" : ""}`}
@@ -73,7 +76,7 @@ export default function Chat() {
                 @{m.username}
               </Link>
               <span className="chat-time">{timeOf(m.createdAt)}</span>
-              {m.editedAt && <span className="edited-tag">(edited)</span>}
+              {m.editedAt && !m.deleted && <span className="edited-tag">(edited)</span>}
               {canEdit(m, user.uid) && editingId !== m.id && (
                 <button
                   className="chat-del"
@@ -83,7 +86,7 @@ export default function Chat() {
                   ✎
                 </button>
               )}
-              {m.from === user.uid && (
+              {m.from === user.uid && !m.deleted && (
                 <button
                   className="chat-del"
                   title="Delete your message"
@@ -93,7 +96,9 @@ export default function Chat() {
                 </button>
               )}
             </div>
-            {editingId === m.id ? (
+            {m.deleted ? (
+              <div className="chat-text gone-text">🚫 Message deleted</div>
+            ) : editingId === m.id ? (
               <MessageEdit
                 initial={m.text}
                 max={500}
